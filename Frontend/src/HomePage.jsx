@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   CheckCircle,
   Users,
@@ -7,13 +8,7 @@ import {
   Shield,
   Globe,
 } from "lucide-react";
-<<<<<<< HEAD
-import Navbar from "./NavBar.jsx";
-import { useNavigate } from "react-router-dom";
-
-=======
 import Navbar from "./NavBar";
->>>>>>> b96a5630d67b8fd8c44a9ed7503ca84db37d3395
 export default function GameOfficialsHub() {
   const navigate = useNavigate();
 
@@ -40,6 +35,7 @@ export default function GameOfficialsHub() {
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
                 <button
+                  onClick={() => navigate("/OfficalsHomepage")}
                   className="text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg hover:opacity-90"
                   style={{ backgroundColor: "#94D82A" }}
                 >
