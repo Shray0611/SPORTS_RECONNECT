@@ -8,7 +8,11 @@ import {
   Globe,
 } from "lucide-react";
 import Navbar from "./NavBar.jsx";
+import { useNavigate } from "react-router-dom";
+
 export default function GameOfficialsHub() {
+  const navigate = useNavigate();
+
   return (
     <main className="min-h-screen bg-white">
       <Navbar />
@@ -44,6 +48,7 @@ export default function GameOfficialsHub() {
                     borderColor: "#94D82A",
                     backgroundColor: "transparent",
                   }}
+                  onClick={() => navigate("/dashboard")} // navigate to OrgDashboard
                 >
                   Find Officials
                 </button>
