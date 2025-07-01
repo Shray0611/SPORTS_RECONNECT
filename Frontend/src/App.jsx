@@ -8,16 +8,20 @@ import SearchDiscover from "./SearchDiscover";
 import BookingOversight from "./BookingOversight";
 import Dashboard from "./DashBoard";
 import OfficialDetails from "./OfficialDetails";
+import OrganizerNavbar from "./OrganizerNavbar";
+import SearchOfficials from "./SearchOfficials";
+import OrgDashboard from "./OrgDashboard"
+
 import Login from "./Login";
 import Register from "./Register";
 import OfficalsHomepage from "./OfficalsHomepage";
-import OrgDashboard from "./OrgDashboard"; // updated import
-import SearchOfficials from "./SearchOfficials"
 const App = () => {
   return (
     <Router>
       <div className="min-h-screen bg-gray-100">
         <Routes>
+          <Route path="/" element={<HomePage />} />
+          {/* <Route path="/register" element={<RegisterForm />} /> */}
           <Route path="/" element={<HomePage />} />{" "}
           {/* Default route - HomePage */}
           {/* <Route path="/register" element={<RegisterForm />} /> */}
@@ -27,7 +31,6 @@ const App = () => {
           <Route path="/booking-oversight" element={<BookingOversight />} />
           <Route path="/dashboard" element={<OrgDashboard />} /> {/* updated route */}
           <Route path="/official-details" element={<OfficialDetails />} />
-
           <Route path="/search-officials" element={<SearchOfficials />} />
           <Route path="/Login" element={<Login />} />
           <Route path="/Register" element={<Register />} />

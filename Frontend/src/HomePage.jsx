@@ -35,6 +35,7 @@ const navigate = useNavigate();
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
                 <button
+                  onClick={() => navigate("/OfficalsHomepage")}
                   className="text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg hover:opacity-90"
                   style={{ backgroundColor: "#94D82A" }}
                 >

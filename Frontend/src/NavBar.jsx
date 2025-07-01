@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Menu, X } from "lucide-react";
 import Login from "./Login";
 import Register from "./Register";
+import zemoLogo from "./assets/zemo_logo.jpg";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -14,32 +15,37 @@ const Navbar = () => {
     <nav className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <div className="flex-shrink-0">
-            <h1 className="text-xl font-bold" style={{ color: "#0B405B" }}>
+          {/* Logo Section */}
+          <div className="flex items-center space-x-3">
+            <img
+              src={zemoLogo}
+              alt="Zemo Logo"
+              className="h-10 w-auto object-contain" // Adjusted height and responsiveness
+            />
+            <h1 className="text-lg font-bold" style={{ color: "#0B405B" }}>
               GameOfficialsHub
             </h1>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:block">
-            <div className="flex items-baseline space-x-8">
+            <div className="flex items-baseline space-x-6">
               <a
-                href="<Log"
+                href="#"
                 className="text-gray-900 px-3 py-2 text-sm font-medium transition-colors hover:text-opacity-80"
                 style={{ color: "#0B405B" }}
               >
                 Home
               </a>
               <a
-                href="Login"
+                href="#"
                 className="text-gray-600 hover:text-opacity-80 px-3 py-2 text-sm font-medium transition-colors"
                 style={{ color: "#0B405B" }}
               >
                 Login
               </a>
               <a
-                href="Register"
+                href="#"
                 className="text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:opacity-90"
                 style={{ backgroundColor: "#94D82A" }}
               >
