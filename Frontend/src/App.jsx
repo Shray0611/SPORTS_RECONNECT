@@ -8,7 +8,9 @@ import SearchDiscover from "./SearchDiscover";
 import BookingOversight from "./BookingOversight";
 import Dashboard from "./DashBoard";
 import OfficialDetails from "./OfficialDetails";
-
+import Login from "./Login";
+import Register from "./Register";
+import OfficalsHomepage from "./OfficalsHomepage";
 const App = () => {
   return (
     <Router>
@@ -70,13 +72,16 @@ const App = () => {
         <Routes>
           <Route path="/" element={<HomePage />} />{" "}
           {/* Default route - HomePage */}
-          <Route path="/register" element={<RegisterForm />} />
+          {/* <Route path="/register" element={<RegisterForm />} /> */}
           <Route path="/complete-profile" element={<CompleteProfile />} />
           <Route path="/admin-panel" element={<AdminPanel />} />
           <Route path="/search-discover" element={<SearchDiscover />} />
           <Route path="/booking-oversight" element={<BookingOversight />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/official-details" element={<OfficialDetails />} />
+          <Route path="/Login" element={<Login />} />
+          <Route path="/Register" element={<Register />} />
+          <Route path="/OfficalsHomepage" element={<OfficalsHomepage />} />
         </Routes>
       </div>
     </Router>

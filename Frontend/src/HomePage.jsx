@@ -7,12 +7,11 @@ import {
   Shield,
   Globe,
 } from "lucide-react";
-import Navbar from "./NavBar.jsx";
+import Navbar from "./NavBar";
 export default function GameOfficialsHub() {
   return (
     <main className="min-h-screen bg-white">
       <Navbar />
-
       {/* Hero Section */}
       <section
         className="py-16 sm:py-24"
@@ -79,10 +78,7 @@ export default function GameOfficialsHub() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div
-              className="text-center rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow"
-              style={{ backgroundColor: "rgba(148, 216, 42, 0.1)" }}
-            >
+            <div className="text-center rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow bg-white">
               <div className="text-4xl mb-4">📝</div>
               <h3
                 className="text-lg font-semibold mb-2"
@@ -95,10 +91,7 @@ export default function GameOfficialsHub() {
               </p>
             </div>
 
-            <div
-              className="text-center rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow"
-              style={{ backgroundColor: "rgba(11, 64, 91, 0.1)" }}
-            >
+            <div className="text-center rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow bg-white">
               <div className="text-4xl mb-4">🔍</div>
               <h3
                 className="text-lg font-semibold mb-2"
@@ -111,10 +104,7 @@ export default function GameOfficialsHub() {
               </p>
             </div>
 
-            <div
-              className="text-center rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow"
-              style={{ backgroundColor: "rgba(148, 216, 42, 0.1)" }}
-            >
+            <div className="text-center rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow bg-white">
               <div className="text-4xl mb-4">📤</div>
               <h3
                 className="text-lg font-semibold mb-2"
@@ -127,10 +117,7 @@ export default function GameOfficialsHub() {
               </p>
             </div>
 
-            <div
-              className="text-center rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow"
-              style={{ backgroundColor: "rgba(11, 64, 91, 0.1)" }}
-            >
+            <div className="text-center rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow bg-white">
               <div className="text-4xl mb-4">✅</div>
               <h3
                 className="text-lg font-semibold mb-2"
@@ -246,7 +233,7 @@ export default function GameOfficialsHub() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div
               className="rounded-2xl p-8"
-              style={{ backgroundColor: "rgba(11, 64, 91, 0.1)" }}
+              style={{ backgroundColor: "rgba(148, 216, 42, 0.1)" }}
             >
               <div className="text-center mb-6">
                 <Users
