@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   User,
-  Calendar,
+  Calendar as CalendarIcon,
   Bell,
   Settings,
   Star,
@@ -9,7 +9,6 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  AlertCircle,
   Menu,
   X,
   BookOpen,
@@ -17,12 +16,41 @@ import {
   TrendingUp,
   DollarSign,
 } from "lucide-react";
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import moment from "moment";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+
+// Initialize localizer for react-big-calendar
+const localizer = momentLocalizer(moment);
 
 const OfficialDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [availabilityEvents, setAvailabilityEvents] = useState([
+    {
+      id: 1,
+      title: "Available",
+      start: new Date(2025, 6, 15, 9, 0),
+      end: new Date(2025, 6, 15, 17, 0),
+      status: "available",
+    },
+    {
+      id: 2,
+      title: "Available",
+      start: new Date(2025, 6, 20, 14, 0),
+      end: new Date(2025, 6, 20, 20, 0),
+      status: "available",
+    },
+  ]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    start: null,
+    end: null,
+    title: "Available",
+    status: "available",
+  });
 
-  // Mock data - in real app this would come from API
+  // Mock data
   const officialData = {
     name: "John Smith",
     sports: ["Football", "Basketball"],
@@ -89,7 +117,7 @@ const OfficialDashboard = () => {
   const sidebarItems = [
     { id: "dashboard", icon: TrendingUp, label: "Dashboard" },
     { id: "profile", icon: User, label: "My Profile" },
-    { id: "availability", icon: Calendar, label: "Availability" },
+    { id: "availability", icon: CalendarIcon, label: "Availability" },
     { id: "bookings", icon: BookOpen, label: "My Bookings" },
     { id: "requests", icon: Bell, label: "Booking Requests" },
     { id: "certifications", icon: Award, label: "Certifications" },
@@ -98,7 +126,6 @@ const OfficialDashboard = () => {
   ];
 
   const handleBookingAction = (requestId, action) => {
-    // In real app, this would make API call
     console.log(`${action} booking request ${requestId}`);
   };
 
@@ -113,6 +140,53 @@ const OfficialDashboard = () => {
       default:
         return "text-gray-600 bg-gray-100";
     }
+  };
+
+  // Calendar event handlers
+  const handleSelectSlot = useCallback(({ start, end }) => {
+    setNewEvent({ start, end, title: "Available", status: "available" });
+    setShowAddModal(true);
+  }, []);
+
+  const handleAddEvent = () => {
+    if (newEvent.start && newEvent.end) {
+      setAvailabilityEvents((prev) => [
+        ...prev,
+        {
+          id: prev.length + 1,
+          title: newEvent.title,
+          start: newEvent.start,
+          end: newEvent.end,
+          status: newEvent.status,
+        },
+      ]);
+      setShowAddModal(false);
+      setNewEvent({
+        start: null,
+        end: null,
+        title: "Available",
+        status: "available",
+      });
+    }
+  };
+
+  const handleSelectEvent = useCallback((event) => {
+    // In real app, this would open an edit modal
+    console.log("Selected event:", event);
+  }, []);
+
+  const eventStyleGetter = (event) => {
+    const backgroundColor =
+      event.status === "available" ? "#94D82A" : "#0B405B";
+    const style = {
+      backgroundColor,
+      borderRadius: "5px",
+      opacity: 0.8,
+      color: "white",
+      border: "0px",
+      display: "block",
+    };
+    return { style };
   };
 
   const renderDashboardContent = () => (
@@ -157,7 +231,7 @@ const OfficialDashboard = () => {
               className="p-3 rounded-full"
               style={{ backgroundColor: "#94D82A33" }}
             >
-              <Calendar className="w-6 h-6" style={{ color: "#0B405B" }} />
+              <CalendarIcon className="w-6 h-6" style={{ color: "#0B405B" }} />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Upcoming</p>
@@ -223,7 +297,7 @@ const OfficialDashboard = () => {
                       {booking.venue}
                     </span>
                     <span className="flex items-center">
-                      <Calendar className="w-4 h-4 mr-1" />
+                      <CalendarIcon className="w-4 h-4 mr-1" />
                       {booking.date}
                     </span>
                     <span className="flex items-center">
@@ -274,7 +348,7 @@ const OfficialDashboard = () => {
                     </p>
                     <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
                       <span className="flex items-center">
-                        <Calendar className="w-4 h-4 mr-1" />
+                        <CalendarIcon className="w-4 h-4 mr-1" />
                         {request.date}
                       </span>
                       <span className="flex items-center">
@@ -316,67 +390,56 @@ const OfficialDashboard = () => {
     switch (activeTab) {
       case "dashboard":
         return renderDashboardContent();
-     case "profile":
-  return (
-    <div className="space-y-6">
-      {/* Profile Header */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        {/* Top Gradient Banner */}
-        <div
-          className="h-32"
-          style={{
-            background: `linear-gradient(135deg, #0B405B 0%, #94D82A 100%)`,
-          }}
-        ></div>
-
-        {/* Profile Content */}
-        <div className="relative px-6 pb-6 bg-white">
-          <div className="flex items-end space-x-5 -mt-12">
-            {/* Avatar */}
-            <div
-              className="w-24 h-24 rounded-full border-4 border-white flex items-center justify-center text-2xl font-bold shadow-lg"
-              style={{
-                backgroundColor: "#94D82A",
-                color: "#0B405B",
-              }}
-            >
-              {officialData.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")}
-            </div>
-
-            {/* Name & Details */}
-            <div className="pb-2">
-              <h1 className="text-2xl font-bold text-gray-900">
-                {officialData.name}
-              </h1>
-              <p className="text-gray-600">
-                {officialData.sports.join(" • ")}
-              </p>
-              <div className="flex items-center mt-1">
-                <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                <span className="ml-1 text-sm font-medium text-gray-700">
-                  {officialData.rating}/5
-                </span>
-                <span className="ml-2 text-sm text-gray-500">
-                  ({officialData.totalMatches} matches)
-                </span>
+      case "profile":
+        return (
+          <div className="space-y-6">
+            {/* Profile Header */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div
+                className="h-32"
+                style={{
+                  background: `linear-gradient(135deg, #0B405B 0%, #94D82A 100%)`,
+                }}
+              ></div>
+              <div className="relative px-6 pb-6 bg-white">
+                <div className="flex items-end space-x-5 -mt-12">
+                  <div
+                    className="w-24 h-24 rounded-full border-4 border-white flex items-center justify-center text-2xl font-bold shadow-lg"
+                    style={{ backgroundColor: "#94D82A", color: "#0B405B" }}
+                  >
+                    {officialData.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </div>
+                  <div className="pb-2">
+                    <h1 className="text-2xl font-bold text-gray-900">
+                      {officialData.name}
+                    </h1>
+                    <p className="text-gray-600">
+                      {officialData.sports.join(" • ")}
+                    </p>
+                    <div className="flex items-center mt-1">
+                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                      <span className="ml-1 text-sm font-medium text-gray-700">
+                        {officialData.rating}/5
+                      </span>
+                      <span className="ml-2 text-sm text-gray-500">
+                        ({officialData.totalMatches} matches)
+                      </span>
+                    </div>
+                  </div>
+                  <div className="ml-auto pb-2">
+                    <button
+                      className="px-4 py-2 text-sm font-medium text-white rounded-md hover:opacity-90"
+                      style={{ backgroundColor: "#0B405B" }}
+                    >
+                      Edit Profile
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-
-            {/* Edit Button */}
-            <div className="ml-auto pb-2">
-              <button
-                className="px-4 py-2 text-sm font-medium text-white rounded-md hover:opacity-90"
-                style={{ backgroundColor: "#0B405B" }}
-              >
-                Edit Profile
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Personal Information */}
@@ -509,7 +572,6 @@ const OfficialDashboard = () => {
 
               {/* Right Sidebar */}
               <div className="space-y-6">
-                {/* Certifications */}
                 <div className="bg-white rounded-lg shadow-md p-6">
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">
                     Certifications
@@ -543,7 +605,6 @@ const OfficialDashboard = () => {
                   </div>
                 </div>
 
-                {/* Availability Status */}
                 <div className="bg-white rounded-lg shadow-md p-6">
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">
                     Availability Status
@@ -573,7 +634,6 @@ const OfficialDashboard = () => {
                   </div>
                 </div>
 
-                {/* Recent Reviews */}
                 <div className="bg-white rounded-lg shadow-md p-6">
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">
                     Recent Reviews
@@ -627,10 +687,94 @@ const OfficialDashboard = () => {
             <h2 className="text-xl font-bold text-gray-900 mb-4">
               Availability Calendar
             </h2>
-            <p className="text-gray-600">
-              Calendar interface for managing availability will be implemented
-              here.
-            </p>
+            <div className="mb-4">
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="px-4 py-2 text-sm font-medium text-white rounded-md"
+                style={{ backgroundColor: "#0B405B" }}
+              >
+                Add Availability
+              </button>
+            </div>
+            <Calendar
+              localizer={localizer}
+              events={availabilityEvents}
+              startAccessor="start"
+              endAccessor="end"
+              style={{ height: 500 }}
+              selectable
+              onSelectSlot={handleSelectSlot}
+              onSelectEvent={handleSelectEvent}
+              eventPropGetter={eventStyleGetter}
+              defaultView="month"
+              views={["month", "week", "day"]}
+            />
+            {showAddModal && (
+              <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Add Availability
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Start Time
+                      </label>
+                      <input
+                        type="datetime-local"
+                        value={
+                          newEvent.start
+                            ? moment(newEvent.start).format("YYYY-MM-DDTHH:mm")
+                            : ""
+                        }
+                        onChange={(e) =>
+                          setNewEvent({
+                            ...newEvent,
+                            start: new Date(e.target.value),
+                          })
+                        }
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        End Time
+                      </label>
+                      <input
+                        type="datetime-local"
+                        value={
+                          newEvent.end
+                            ? moment(newEvent.end).format("YYYY-MM-DDTHH:mm")
+                            : ""
+                        }
+                        onChange={(e) =>
+                          setNewEvent({
+                            ...newEvent,
+                            end: new Date(e.target.value),
+                          })
+                        }
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-6 flex justify-end space-x-3">
+                    <button
+                      onClick={() => setShowAddModal(false)}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleAddEvent}
+                      className="px-4 py-2 text-sm font-medium text-white rounded-md"
+                      style={{ backgroundColor: "#0B405B" }}
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       case "bookings":
@@ -692,7 +836,6 @@ const OfficialDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
-      {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div
@@ -702,7 +845,6 @@ const OfficialDashboard = () => {
         </div>
       )}
 
-      {/* Sidebar */}
       <div
         className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:relative ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -712,7 +854,6 @@ const OfficialDashboard = () => {
           className="flex flex-col h-full min-h-screen"
           style={{ backgroundColor: "#0B405B" }}
         >
-          {/* Logo */}
           <div className="flex items-center justify-between h-16 px-6 border-b border-blue-800 flex-shrink-0">
             <h1 className="text-xl font-bold text-white">MatchOfficials</h1>
             <button
@@ -723,7 +864,6 @@ const OfficialDashboard = () => {
             </button>
           </div>
 
-          {/* Profile Summary */}
           <div className="px-6 py-4 border-b border-blue-800 flex-shrink-0">
             <div className="flex items-center">
               <div
@@ -746,7 +886,6 @@ const OfficialDashboard = () => {
             </div>
           </div>
 
-          {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
             {sidebarItems.map((item) => {
               const Icon = item.icon;
@@ -779,7 +918,6 @@ const OfficialDashboard = () => {
             })}
           </nav>
 
-          {/* Quick Stats */}
           <div className="px-6 py-4 border-t border-blue-800 flex-shrink-0 mt-auto">
             <div className="flex items-center justify-between text-sm text-blue-200">
               <span>Experience</span>
@@ -797,9 +935,7 @@ const OfficialDashboard = () => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen">
-        {/* Top bar */}
         <div className="sticky top-0 z-10 bg-white shadow-sm border-b border-gray-200">
           <div className="flex items-center justify-between h-16 px-6">
             <button
@@ -808,7 +944,6 @@ const OfficialDashboard = () => {
             >
               <Menu className="w-6 h-6" />
             </button>
-
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <Bell className="w-6 h-6 text-gray-600" />
@@ -831,7 +966,6 @@ const OfficialDashboard = () => {
           </div>
         </div>
 
-        {/* Page Content */}
         <main className="flex-1 p-6 overflow-y-auto">{renderContent()}</main>
       </div>
     </div>
