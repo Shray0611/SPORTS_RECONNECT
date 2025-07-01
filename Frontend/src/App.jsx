@@ -8,6 +8,15 @@ import SearchDiscover from "./SearchDiscover";
 import BookingOversight from "./BookingOversight";
 import Dashboard from "./Dashboard";
 import OfficialDetails from "./OfficialDetails";
+import React from "react";
+import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
+import RegisterForm from "./RegisterForm";
+import CompleteProfile from "./CompleteProfile";
+import AdminPanel from "./AdminPanel";
+import SearchDiscover from "./SearchDiscover";
+import BookingOversight from "./BookingOversight";
+import Dashboard from "./Dashboard";
+import OfficialDetails from "./OfficialDetails";
 
 const App = () => {
   return (
