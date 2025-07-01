@@ -1,21 +1,12 @@
 import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 import HomePage from "./HomePage";
 import RegisterForm from "./RegisterForm";
 import CompleteProfile from "./CompleteProfile";
 import AdminPanel from "./AdminPanel";
 import SearchDiscover from "./SearchDiscover";
 import BookingOversight from "./BookingOversight";
-import Dashboard from "./Dashboard";
-import OfficialDetails from "./OfficialDetails";
-import React from "react";
-import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
-import RegisterForm from "./RegisterForm";
-import CompleteProfile from "./CompleteProfile";
-import AdminPanel from "./AdminPanel";
-import SearchDiscover from "./SearchDiscover";
-import BookingOversight from "./BookingOversight";
-import Dashboard from "./Dashboard";
+import Dashboard from "./DashBoard";
 import OfficialDetails from "./OfficialDetails";
 
 const App = () => {
@@ -25,13 +16,53 @@ const App = () => {
         {/* Navigation (optional, can be moved to a separate Navbar component) */}
         <nav className="bg-white p-4 shadow-lg">
           <ul className="flex space-x-4">
-            <li><Link to="/register" className="text-blue-600 hover:underline">Register</Link></li>
-            <li><Link to="/complete-profile" className="text-blue-600 hover:underline">Complete Profile</Link></li>
-            <li><Link to="/admin-panel" className="text-blue-600 hover:underline">Admin Panel</Link></li>
-            <li><Link to="/search-discover" className="text-blue-600 hover:underline">Search & Discover</Link></li>
-            <li><Link to="/booking-oversight" className="text-blue-600 hover:underline">Booking Oversight</Link></li>
-            <li><Link to="/dashboard" className="text-blue-600 hover:underline">Dashboard</Link></li>
-            <li><Link to="/official-details" className="text-blue-600 hover:underline">Official Details</Link></li>
+            <li>
+              <Link to="/register" className="text-blue-600 hover:underline">
+                Register
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/complete-profile"
+                className="text-blue-600 hover:underline"
+              >
+                Complete Profile
+              </Link>
+            </li>
+            <li>
+              <Link to="/admin-panel" className="text-blue-600 hover:underline">
+                Admin Panel
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/search-discover"
+                className="text-blue-600 hover:underline"
+              >
+                Search & Discover
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/booking-oversight"
+                className="text-blue-600 hover:underline"
+              >
+                Booking Oversight
+              </Link>
+            </li>
+            <li>
+              <Link to="/dashboard" className="text-blue-600 hover:underline">
+                Dashboard
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/official-details"
+                className="text-blue-600 hover:underline"
+              >
+                Official Details
+              </Link>
+            </li>
           </ul>
         </nav>
 
