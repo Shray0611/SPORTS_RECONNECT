@@ -316,13 +316,309 @@ const OfficialDashboard = () => {
     switch (activeTab) {
       case "dashboard":
         return renderDashboardContent();
-      case "profile":
-        return (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">My Profile</h2>
-            <p className="text-gray-600">
-              Profile management interface will be implemented here.
-            </p>
+     case "profile":
+  return (
+    <div className="space-y-6">
+      {/* Profile Header */}
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        {/* Top Gradient Banner */}
+        <div
+          className="h-32"
+          style={{
+            background: `linear-gradient(135deg, #0B405B 0%, #94D82A 100%)`,
+          }}
+        ></div>
+
+        {/* Profile Content */}
+        <div className="relative px-6 pb-6 bg-white">
+          <div className="flex items-end space-x-5 -mt-12">
+            {/* Avatar */}
+            <div
+              className="w-24 h-24 rounded-full border-4 border-white flex items-center justify-center text-2xl font-bold shadow-lg"
+              style={{
+                backgroundColor: "#94D82A",
+                color: "#0B405B",
+              }}
+            >
+              {officialData.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")}
+            </div>
+
+            {/* Name & Details */}
+            <div className="pb-2">
+              <h1 className="text-2xl font-bold text-gray-900">
+                {officialData.name}
+              </h1>
+              <p className="text-gray-600">
+                {officialData.sports.join(" • ")}
+              </p>
+              <div className="flex items-center mt-1">
+                <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                <span className="ml-1 text-sm font-medium text-gray-700">
+                  {officialData.rating}/5
+                </span>
+                <span className="ml-2 text-sm text-gray-500">
+                  ({officialData.totalMatches} matches)
+                </span>
+              </div>
+            </div>
+
+            {/* Edit Button */}
+            <div className="ml-auto pb-2">
+              <button
+                className="px-4 py-2 text-sm font-medium text-white rounded-md hover:opacity-90"
+                style={{ backgroundColor: "#0B405B" }}
+              >
+                Edit Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Personal Information */}
+              <div className="lg:col-span-2">
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                    Personal Information
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Full Name
+                      </label>
+                      <p className="text-gray-900">{officialData.name}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Email
+                      </label>
+                      <p className="text-gray-900">john.smith@email.com</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Phone
+                      </label>
+                      <p className="text-gray-900">+91 9876543210</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Date of Birth
+                      </label>
+                      <p className="text-gray-900">March 15, 1985</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Location
+                      </label>
+                      <p className="text-gray-900">{officialData.location}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Experience
+                      </label>
+                      <p className="text-gray-900">{officialData.experience}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sports & Specializations */}
+                <div className="bg-white rounded-lg shadow-md p-6 mt-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                    Sports & Specializations
+                  </h2>
+                  <div className="space-y-4">
+                    {officialData.sports.map((sport, index) => (
+                      <div
+                        key={index}
+                        className="border border-gray-200 rounded-lg p-4"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-medium text-gray-900">{sport}</h3>
+                          <span
+                            className="px-2 py-1 text-xs font-medium rounded-full"
+                            style={{
+                              backgroundColor: "#94D82A33",
+                              color: "#0B405B",
+                            }}
+                          >
+                            Primary
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600">Roles:</span>
+                            <p className="text-gray-900">
+                              {sport === "Football"
+                                ? "Referee, Linesman"
+                                : "Referee, Scorer"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Level:</span>
+                            <p className="text-gray-900">
+                              {sport === "Football"
+                                ? "Professional"
+                                : "Semi-Professional"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Performance Statistics */}
+                <div className="bg-white rounded-lg shadow-md p-6 mt-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                    Performance Statistics
+                  </h2>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className="text-2xl font-bold text-gray-900">
+                        {officialData.totalMatches}
+                      </div>
+                      <div className="text-sm text-gray-600">Total Matches</div>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className="text-2xl font-bold text-gray-900">
+                        {officialData.rating}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Average Rating
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className="text-2xl font-bold text-gray-900">
+                        98%
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Completion Rate
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className="text-2xl font-bold text-gray-900">15</div>
+                      <div className="text-sm text-gray-600">This Month</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Sidebar */}
+              <div className="space-y-6">
+                {/* Certifications */}
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                    Certifications
+                  </h2>
+                  <div className="space-y-3">
+                    {officialData.certifications.map((cert, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg"
+                      >
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center"
+                          style={{ backgroundColor: "#94D82A33" }}
+                        >
+                          <Award
+                            className="w-5 h-5"
+                            style={{ color: "#0B405B" }}
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">{cert}</p>
+                          <p className="text-xs text-gray-500">
+                            Valid until 2026
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                    <button className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700">
+                      + Add Certification
+                    </button>
+                  </div>
+                </div>
+
+                {/* Availability Status */}
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                    Availability Status
+                  </h2>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-700">Current Status</span>
+                      <span className="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">
+                        Available
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-700">Next Available</span>
+                      <span className="text-sm text-gray-900">
+                        July 15, 2025
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-700">
+                        Weekend Availability
+                      </span>
+                      <span className="text-sm text-gray-900">Open</span>
+                    </div>
+                    <button className="w-full mt-3 px-4 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+                      Update Availability
+                    </button>
+                  </div>
+                </div>
+
+                {/* Recent Reviews */}
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                    Recent Reviews
+                  </h2>
+                  <div className="space-y-4">
+                    <div className="border-b border-gray-200 pb-3">
+                      <div className="flex items-center mb-2">
+                        <div className="flex text-yellow-400">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className="w-4 h-4 fill-current" />
+                          ))}
+                        </div>
+                        <span className="ml-2 text-sm text-gray-600">5.0</span>
+                      </div>
+                      <p className="text-sm text-gray-700">
+                        "Excellent officiating skills and professional conduct."
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        - Mumbai FC Tournament
+                      </p>
+                    </div>
+                    <div className="border-b border-gray-200 pb-3">
+                      <div className="flex items-center mb-2">
+                        <div className="flex text-yellow-400">
+                          {[...Array(4)].map((_, i) => (
+                            <Star key={i} className="w-4 h-4 fill-current" />
+                          ))}
+                          <Star className="w-4 h-4 text-gray-300" />
+                        </div>
+                        <span className="ml-2 text-sm text-gray-600">4.0</span>
+                      </div>
+                      <p className="text-sm text-gray-700">
+                        "Good decision making throughout the match."
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        - Basketball League
+                      </p>
+                    </div>
+                    <button className="w-full text-sm text-blue-600 hover:text-blue-700 font-medium">
+                      View All Reviews
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         );
       case "availability":
@@ -413,11 +709,11 @@ const OfficialDashboard = () => {
         }`}
       >
         <div
-          className="flex flex-col h-screen"
+          className="flex flex-col h-full min-h-screen"
           style={{ backgroundColor: "#0B405B" }}
         >
           {/* Logo */}
-          <div className="flex items-center justify-between h-16 px-6 border-b border-blue-800">
+          <div className="flex items-center justify-between h-16 px-6 border-b border-blue-800 flex-shrink-0">
             <h1 className="text-xl font-bold text-white">MatchOfficials</h1>
             <button
               onClick={() => setSidebarOpen(false)}
@@ -428,7 +724,7 @@ const OfficialDashboard = () => {
           </div>
 
           {/* Profile Summary */}
-          <div className="px-6 py-4 border-b border-blue-800">
+          <div className="px-6 py-4 border-b border-blue-800 flex-shrink-0">
             <div className="flex items-center">
               <div
                 className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
@@ -484,7 +780,7 @@ const OfficialDashboard = () => {
           </nav>
 
           {/* Quick Stats */}
-          <div className="px-6 py-4 border-t border-blue-800">
+          <div className="px-6 py-4 border-t border-blue-800 flex-shrink-0 mt-auto">
             <div className="flex items-center justify-between text-sm text-blue-200">
               <span>Experience</span>
               <span className="text-white font-medium">
