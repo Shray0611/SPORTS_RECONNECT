@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Menu, X } from "lucide-react";
+import Login from "./Login";
+import Register from "./Register";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -10,7 +12,7 @@ const Navbar = () => {
 
   return (
     <nav className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
@@ -21,23 +23,23 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-8">
+            <div className="flex items-baseline space-x-8">
               <a
-                href="#"
+                href="<Log"
                 className="text-gray-900 px-3 py-2 text-sm font-medium transition-colors hover:text-opacity-80"
                 style={{ color: "#0B405B" }}
               >
                 Home
               </a>
               <a
-                href="#"
+                href="Login"
                 className="text-gray-600 hover:text-opacity-80 px-3 py-2 text-sm font-medium transition-colors"
                 style={{ color: "#0B405B" }}
               >
                 Login
               </a>
               <a
-                href="#"
+                href="Register"
                 className="text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:opacity-90"
                 style={{ backgroundColor: "#94D82A" }}
               >
