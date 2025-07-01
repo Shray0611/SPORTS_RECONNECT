@@ -1,5 +1,10 @@
 import React from "react";
+<<<<<<< HEAD
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
+=======
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import HomePage from "./HomePage";
+>>>>>>> 7ba3451f5ee86cba5982913ea9ae92f017fb9f2f
 import RegisterForm from "./RegisterForm";
 import CompleteProfile from "./CompleteProfile";
 import AdminPanel from "./AdminPanel";
@@ -12,6 +17,7 @@ const App = () => {
   return (
     <Router>
       <div className="min-h-screen bg-gray-100">
+<<<<<<< HEAD
         {/* Navigation (optional, can be moved to a separate Navbar component) */}
         <nav className="bg-white p-4 shadow-lg">
           <ul className="flex space-x-4">
@@ -65,8 +71,12 @@ const App = () => {
           </ul>
         </nav>
 
+=======
+>>>>>>> 7ba3451f5ee86cba5982913ea9ae92f017fb9f2f
         {/* Routes */}
         <Routes>
+          <Route path="/" element={<HomePage />} />{" "}
+          {/* Default route - HomePage */}
           <Route path="/register" element={<RegisterForm />} />
           <Route path="/complete-profile" element={<CompleteProfile />} />
           <Route path="/admin-panel" element={<AdminPanel />} />
@@ -74,7 +84,6 @@ const App = () => {
           <Route path="/booking-oversight" element={<BookingOversight />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/official-details" element={<OfficialDetails />} />
-          <Route path="/" element={<RegisterForm />} /> {/* Default route */}
         </Routes>
       </div>
     </Router>
