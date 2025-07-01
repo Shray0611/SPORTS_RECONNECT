@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   CheckCircle,
   Users,
@@ -7,15 +8,9 @@ import {
   Shield,
   Globe,
 } from "lucide-react";
-<<<<<<< HEAD
-import Navbar from "./NavBar.jsx";
-import { useNavigate } from "react-router-dom";
-
-=======
 import Navbar from "./NavBar";
->>>>>>> b96a5630d67b8fd8c44a9ed7503ca84db37d3395
 export default function GameOfficialsHub() {
-  const navigate = useNavigate();
+const navigate = useNavigate();
 
   return (
     <main className="min-h-screen bg-white">

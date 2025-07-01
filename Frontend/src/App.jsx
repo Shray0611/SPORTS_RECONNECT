@@ -6,17 +6,13 @@ import CompleteProfile from "./CompleteProfile";
 import AdminPanel from "./AdminPanel";
 import SearchDiscover from "./SearchDiscover";
 import BookingOversight from "./BookingOversight";
-
 import Dashboard from "./DashBoard";
 import OfficialDetails from "./OfficialDetails";
 import Login from "./Login";
 import Register from "./Register";
 import OfficalsHomepage from "./OfficalsHomepage";
 import OrgDashboard from "./OrgDashboard"; // updated import
-import OfficialDetails from "./OfficialDetails";
-import Login from "./Login";
-import Register from "./Register";
-import OfficalsHomepage from "./OfficalsHomepage";
+import SearchOfficials from "./SearchOfficials"
 const App = () => {
   return (
     <Router>
