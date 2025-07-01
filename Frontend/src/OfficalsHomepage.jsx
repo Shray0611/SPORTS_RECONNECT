@@ -79,7 +79,7 @@ const OfficialDashboard = () => {
       sport: "Basketball",
       date: "2025-07-20",
       time: "14:30",
-      status: "pending",
+      status: "confirmed",
       venue: "NSCI Stadium",
     },
     {

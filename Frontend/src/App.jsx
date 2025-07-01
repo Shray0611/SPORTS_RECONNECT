@@ -6,10 +6,11 @@ import CompleteProfile from "./CompleteProfile";
 import AdminPanel from "./AdminPanel";
 import SearchDiscover from "./SearchDiscover";
 import BookingOversight from "./BookingOversight";
-import OrgDashboard from "./OrgDashboard"; // updated import
+import Dashboard from "./DashBoard";
 import OfficialDetails from "./OfficialDetails";
 import OrganizerNavbar from "./OrganizerNavbar";
 import SearchOfficials from "./SearchOfficials";
+import OrgDashboard from "./OrgDashboard"
 
 import Login from "./Login";
 import Register from "./Register";
