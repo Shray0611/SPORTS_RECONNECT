@@ -10,6 +10,7 @@ import Dashboard from "./Dashboard";
 import OfficialDetails from "./OfficialDetails";
 import Login from "./Login";
 import Register from "./Register";
+import OfficalsHomepage from "./OfficalsHomepage";
 const App = () => {
   return (
     <Router>
@@ -27,6 +28,7 @@ const App = () => {
           <Route path="/official-details" element={<OfficialDetails />} />
           <Route path="/Login" element={<Login />} />
           <Route path="/Register" element={<Register />} />
+          <Route path="/OfficalsHomepage" element={<OfficalsHomepage />} />
         </Routes>
       </div>
     </Router>
