@@ -20,7 +20,7 @@ export default function OrganizerNavbar() {
           Search Officials
         </Link>
         <Link 
-          to="/dashboard" 
+          to="/OrgDashboard" 
           className="hover:text-[#94D82A] py-3 px-3 rounded hover:bg-[#0B405B]/50 transition-colors font-medium"
         >
           OrgDashboard

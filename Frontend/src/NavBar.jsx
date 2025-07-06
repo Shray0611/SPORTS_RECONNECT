@@ -38,14 +38,14 @@ const Navbar = () => {
                 Home
               </a>
               <a
-                href="#"
+                href="Login"
                 className="text-gray-600 hover:text-opacity-80 px-3 py-2 text-sm font-medium transition-colors"
                 style={{ color: "#0B405B" }}
               >
                 Login
               </a>
               <a
-                href="#"
+                href="Register"
                 className="text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:opacity-90"
                 style={{ backgroundColor: "#94D82A" }}
               >

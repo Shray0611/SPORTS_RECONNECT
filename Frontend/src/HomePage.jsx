@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import Navbar from "./NavBar";
 export default function GameOfficialsHub() {
-const navigate = useNavigate();
+  const navigate = useNavigate();
 
   return (
     <main className="min-h-screen bg-white">
@@ -47,7 +47,7 @@ const navigate = useNavigate();
                     borderColor: "#94D82A",
                     backgroundColor: "transparent",
                   }}
-                  onClick={() => navigate("/dashboard")} // navigate to OrgDashboard
+                  onClick={() => navigate("/OrgDashboard")} // navigate to OrgDashboard
                 >
                   Find Officials
                 </button>
