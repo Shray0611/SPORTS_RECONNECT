@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Eye,
   EyeOff,
@@ -7,25 +8,86 @@ import {
   ArrowRight,
   Users,
   Calendar,
+  Crown,
+  AlertCircle,
 } from "lucide-react";
 import Navbar from "./NavBar";
+import apiService from "./services/api";
+import { decodeToken, getRedirectPath } from "./utils/jwt";
+
 export default function LoginPage() {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [userType, setUserType] = useState("official");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [isAdminLogin, setIsAdminLogin] = useState(false);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleSubmit = () => {
-    console.log("Login attempt:", { email, password, userType });
+  const handleSubmit = async () => {
+    if (!email || !password) {
+      setError("Please fill in all fields");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      // Login with the backend API
+      const response = await apiService.login(email, password);
+
+      // Store the token
+      apiService.setToken(response.token);
+
+      // Decode JWT to get user role
+      const decodedToken = decodeToken(response.token);
+
+      if (!decodedToken || !decodedToken.role) {
+        throw new Error("Invalid token received");
+      }
+
+      // Get redirect path based on role
+      const redirectPath = getRedirectPath(decodedToken.role);
+
+      // Redirect to appropriate dashboard
+      navigate(redirectPath);
+    } catch (error) {
+      setError(error.message || "Login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSubmit();
+    }
+  };
+
+  const toggleAdminLogin = () => {
+    setIsAdminLogin(!isAdminLogin);
+    setUserType("official");
+    setError("");
+
+    if (!isAdminLogin) {
+      // Pre-fill admin credentials
+      setEmail("admin@gameofficials.com");
+      setPassword("Admin@123");
+    } else {
+      // Clear fields for regular login
+      setEmail("");
+      setPassword("");
+    }
   };
 
   return (
     <div className="min-h-screen flex">
-      
       {/* Left Side - Branding */}
       <div
         className="hidden lg:flex lg:w-1/2 relative overflow-hidden"
@@ -66,6 +128,16 @@ export default function LoginPage() {
                 Find and book certified officials for your events
               </p>
             </div>
+
+            <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 border border-white border-opacity-20">
+              <div className="flex items-center mb-3">
+                <Crown className="h-6 w-6 mr-3" style={{ color: "#94D82A" }} />
+                <h3 className="font-semibold">For Administrators</h3>
+              </div>
+              <p className="text-sm text-gray-200">
+                Manage the platform and oversee operations
+              </p>
+            </div>
           </div>
         </div>
 
@@ -86,53 +158,83 @@ export default function LoginPage() {
                 className="text-3xl font-bold mb-2"
                 style={{ color: "#0B405B" }}
               >
-                Welcome Back
+                {isAdminLogin ? "Admin Login" : "Welcome Back"}
               </h2>
-              <p className="text-gray-600">Sign in to your account</p>
+              <p className="text-gray-600">
+                {isAdminLogin
+                  ? "Access admin dashboard"
+                  : "Sign in to your account"}
+              </p>
             </div>
 
-            {/* User Type Selection */}
+            {/* Admin Login Toggle */}
             <div className="mb-6">
-              <div
-                className="flex rounded-lg p-1"
-                style={{ backgroundColor: "rgba(11, 64, 91, 0.1)" }}
+              <button
+                type="button"
+                onClick={toggleAdminLogin}
+                className={`w-full py-2 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isAdminLogin
+                    ? "bg-yellow-100 text-yellow-800 border border-yellow-300"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
               >
-                <button
-                  type="button"
-                  onClick={() => setUserType("official")}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
-                    userType === "official"
-                      ? "bg-white text-white shadow-sm"
-                      : "text-gray-600 hover:text-gray-800"
-                  }`}
-                  style={
-                    userType === "official"
-                      ? { backgroundColor: "#0B405B" }
-                      : {}
-                  }
-                >
-                  <Users className="h-4 w-4 inline mr-2" />
-                  Official
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setUserType("organizer")}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
-                    userType === "organizer"
-                      ? "bg-white text-white shadow-sm"
-                      : "text-gray-600 hover:text-gray-800"
-                  }`}
-                  style={
-                    userType === "organizer"
-                      ? { backgroundColor: "#0B405B" }
-                      : {}
-                  }
-                >
-                  <Calendar className="h-4 w-4 inline mr-2" />
-                  Organizer
-                </button>
-              </div>
+                <Crown className="h-4 w-4 inline mr-2" />
+                {isAdminLogin ? "Admin Mode Active" : "Switch to Admin Login"}
+              </button>
             </div>
+
+            {/* User Type Selection (only for regular login) */}
+            {!isAdminLogin && (
+              <div className="mb-6">
+                <div
+                  className="flex rounded-lg p-1"
+                  style={{ backgroundColor: "rgba(11, 64, 91, 0.1)" }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setUserType("official")}
+                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
+                      userType === "official"
+                        ? "bg-white text-white shadow-sm"
+                        : "text-gray-600 hover:text-gray-800"
+                    }`}
+                    style={
+                      userType === "official"
+                        ? { backgroundColor: "#0B405B" }
+                        : {}
+                    }
+                  >
+                    <Users className="h-4 w-4 inline mr-2" />
+                    Official
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUserType("organizer")}
+                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
+                      userType === "organizer"
+                        ? "bg-white text-white shadow-sm"
+                        : "text-gray-600 hover:text-gray-800"
+                    }`}
+                    style={
+                      userType === "organizer"
+                        ? { backgroundColor: "#0B405B" }
+                        : {}
+                    }
+                  >
+                    <Calendar className="h-4 w-4 inline mr-2" />
+                    Organizer
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center">
+                <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+                <span className="text-red-700 text-sm">{error}</span>
+              </div>
+            )}
 
             <div className="space-y-6">
               {/* Email Field */}
@@ -152,9 +254,15 @@ export default function LoginPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    onKeyPress={handleKeyPress}
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent transition-all duration-200"
                     style={{ focusRingColor: "#94D82A" }}
-                    placeholder="Enter your email"
+                    placeholder={
+                      isAdminLogin
+                        ? "admin@gameofficials.com"
+                        : "Enter your email"
+                    }
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -176,14 +284,19 @@ export default function LoginPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    onKeyPress={handleKeyPress}
                     className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent transition-all duration-200"
                     style={{ focusRingColor: "#94D82A" }}
-                    placeholder="Enter your password"
+                    placeholder={
+                      isAdminLogin ? "Admin@123" : "Enter your password"
+                    }
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={togglePasswordVisibility}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    disabled={isLoading}
                   >
                     {showPassword ? (
                       <EyeOff className="h-5 w-5" />
@@ -202,6 +315,7 @@ export default function LoginPage() {
                     name="remember-me"
                     type="checkbox"
                     className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    disabled={isLoading}
                   />
                   <label
                     htmlFor="remember-me"
@@ -223,11 +337,21 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="w-full flex items-center justify-center py-3 px-4 rounded-lg text-white font-semibold transition-all duration-200 hover:opacity-90 transform hover:scale-105 shadow-lg"
+                disabled={isLoading}
+                className="w-full flex items-center justify-center py-3 px-4 rounded-lg text-white font-semibold transition-all duration-200 hover:opacity-90 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: "#94D82A" }}
               >
-                Sign In
-                <ArrowRight className="ml-2 h-5 w-5" />
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Signing In...
+                  </>
+                ) : (
+                  <>
+                    Sign In
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </>
+                )}
               </button>
             </div>
 
@@ -249,6 +373,7 @@ export default function LoginPage() {
             <div className="text-center">
               <button
                 type="button"
+                onClick={() => navigate("/Register")}
                 className="w-full py-3 px-4 border-2 rounded-lg font-semibold transition-all duration-200 hover:bg-gray-50"
                 style={{ borderColor: "#0B405B", color: "#0B405B" }}
               >
