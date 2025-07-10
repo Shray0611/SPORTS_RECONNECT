@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   User,
   Calendar as CalendarIcon,
@@ -19,6 +19,8 @@ import {
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import { logout } from "../utils/auth";
+import { useNavigate } from "react-router-dom";
 
 // Initialize localizer for react-big-calendar
 const localizer = momentLocalizer(moment);
@@ -49,6 +51,23 @@ const OfficialDashboard = () => {
     title: "Available",
     status: "available",
   });
+
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      logout();
+      window.location.href = "/";
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
 
   // Mock data
   const officialData = {
@@ -916,6 +935,13 @@ const OfficialDashboard = () => {
                 </button>
               );
             })}
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 text-blue-200 hover:text-white hover:bg-blue-800"
+            >
+              <X className="w-5 h-5 mr-3" />
+              Logout
+            </button>
           </nav>
 
           <div className="px-6 py-4 border-t border-blue-800 flex-shrink-0 mt-auto">

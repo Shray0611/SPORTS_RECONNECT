@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, LogOut, User, Crown } from "lucide-react";
-import Login from "./Login";
-import Register from "./Register";
-import zemoLogo from "./assets/zemo_logo.jpg";
-import { logout, isAuthenticated, getCurrentUser } from "./utils/auth";
-import { decodeToken, getRedirectPath } from "./utils/jwt";
+import Login from "../auth/Login";
+import Register from "../auth/Register";
+import zemoLogo from "../assets/zemo_logo.jpg";
+import { logout, isAuthenticated, getCurrentUser } from "../utils/auth";
+import { decodeToken, getRedirectPath } from "../utils/jwt";
 
 const Navbar = () => {
   const navigate = useNavigate();

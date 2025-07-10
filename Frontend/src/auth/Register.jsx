@@ -14,8 +14,8 @@ import {
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
-import apiService from "./services/api";
-import { decodeToken, getRedirectPath } from "./utils/jwt";
+import apiService from "../services/api";
+import { decodeToken, getRedirectPath } from "../utils/jwt";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -121,12 +121,6 @@ export default function RegisterPage() {
         email: formData.email,
         password: formData.password,
         role: userType,
-        // Additional fields that might be useful for the backend
-        phone: formData.phone,
-        location: formData.location,
-        sports: formData.sports,
-        experience: formData.experience,
-        organization: formData.organization,
       };
 
       const response = await apiService.register(userData);

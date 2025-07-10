@@ -1,7 +1,19 @@
-import React from "react";
+import React, { useEffect } from "react";
 import OrganizerNavbar from "./OrganizerNavbar";
+import { logout } from "../utils/auth";
 
 export default function OrgDashboard() {
+  useEffect(() => {
+    const handlePopState = () => {
+      logout();
+      window.location.href = "/";
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
+
   const bookings = [
     {
       id: 1,

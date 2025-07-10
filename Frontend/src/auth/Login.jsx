@@ -11,23 +11,17 @@ import {
   Crown,
   AlertCircle,
 } from "lucide-react";
-<<<<<<< HEAD:Frontend/src/auth/Login.jsx
 import Navbar from "../Home/NavBar";
-=======
-import Navbar from "./NavBar";
-import apiService from "./services/api";
-import { decodeToken, getRedirectPath } from "./utils/jwt";
+import apiService from "../services/api";
+import { decodeToken, getRedirectPath } from "../utils/jwt";
 
->>>>>>> 5b28246eeafdead154fd18883794557bd780f58f:Frontend/src/Login.jsx
 export default function LoginPage() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [userType, setUserType] = useState("official");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isAdminLogin, setIsAdminLogin] = useState(false);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -71,22 +65,6 @@ export default function LoginPage() {
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       handleSubmit();
-    }
-  };
-
-  const toggleAdminLogin = () => {
-    setIsAdminLogin(!isAdminLogin);
-    setUserType("official");
-    setError("");
-
-    if (!isAdminLogin) {
-      // Pre-fill admin credentials
-      setEmail("admin@gameofficials.com");
-      setPassword("Admin@123");
-    } else {
-      // Clear fields for regular login
-      setEmail("");
-      setPassword("");
     }
   };
 
@@ -162,75 +140,10 @@ export default function LoginPage() {
                 className="text-3xl font-bold mb-2"
                 style={{ color: "#0B405B" }}
               >
-                {isAdminLogin ? "Admin Login" : "Welcome Back"}
+                Welcome Back
               </h2>
-              <p className="text-gray-600">
-                {isAdminLogin
-                  ? "Access admin dashboard"
-                  : "Sign in to your account"}
-              </p>
+              <p className="text-gray-600">Sign in to your account</p>
             </div>
-
-            {/* Admin Login Toggle */}
-            <div className="mb-6">
-              <button
-                type="button"
-                onClick={toggleAdminLogin}
-                className={`w-full py-2 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isAdminLogin
-                    ? "bg-yellow-100 text-yellow-800 border border-yellow-300"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                <Crown className="h-4 w-4 inline mr-2" />
-                {isAdminLogin ? "Admin Mode Active" : "Switch to Admin Login"}
-              </button>
-            </div>
-
-            {/* User Type Selection (only for regular login) */}
-            {!isAdminLogin && (
-              <div className="mb-6">
-                <div
-                  className="flex rounded-lg p-1"
-                  style={{ backgroundColor: "rgba(11, 64, 91, 0.1)" }}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setUserType("official")}
-                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
-                      userType === "official"
-                        ? "bg-white text-white shadow-sm"
-                        : "text-gray-600 hover:text-gray-800"
-                    }`}
-                    style={
-                      userType === "official"
-                        ? { backgroundColor: "#0B405B" }
-                        : {}
-                    }
-                  >
-                    <Users className="h-4 w-4 inline mr-2" />
-                    Official
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setUserType("organizer")}
-                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
-                      userType === "organizer"
-                        ? "bg-white text-white shadow-sm"
-                        : "text-gray-600 hover:text-gray-800"
-                    }`}
-                    style={
-                      userType === "organizer"
-                        ? { backgroundColor: "#0B405B" }
-                        : {}
-                    }
-                  >
-                    <Calendar className="h-4 w-4 inline mr-2" />
-                    Organizer
-                  </button>
-                </div>
-              </div>
-            )}
 
             {/* Error Message */}
             {error && (
@@ -261,11 +174,7 @@ export default function LoginPage() {
                     onKeyPress={handleKeyPress}
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent transition-all duration-200"
                     style={{ focusRingColor: "#94D82A" }}
-                    placeholder={
-                      isAdminLogin
-                        ? "admin@gameofficials.com"
-                        : "Enter your email"
-                    }
+                    placeholder="Enter your email"
                     disabled={isLoading}
                   />
                 </div>
@@ -291,9 +200,7 @@ export default function LoginPage() {
                     onKeyPress={handleKeyPress}
                     className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent transition-all duration-200"
                     style={{ focusRingColor: "#94D82A" }}
-                    placeholder={
-                      isAdminLogin ? "Admin@123" : "Enter your password"
-                    }
+                    placeholder="Enter your password"
                     disabled={isLoading}
                   />
                   <button

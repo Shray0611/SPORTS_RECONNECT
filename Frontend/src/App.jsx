@@ -1,14 +1,13 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import HomePage from "./HomePage";
-import CompleteProfile from "./CompleteProfile";
-import AdminPanel from "./AdminPanel";
-import OrganizerNavbar from "./OrganizerNavbar";
-import SearchOfficials from "./SearchOfficials";
-import OrgDashboard from "./OrgDashboard";
-import Login from "./Login";
-import Register from "./Register";
-import OfficalsHomepage from "./OfficalsHomepage";
+import HomePage from "./Home/HomePage";
+import AdminPanel from "./admin/AdminPanel";
+import OrganizerNavbar from "./organizers/OrganizerNavbar";
+import SearchOfficials from "./organizers/SearchOfficials";
+import OrgDashboard from "./organizers/OrgDashboard";
+import Login from "./auth/Login";
+import Register from "./auth/Register";
+import OfficalsHomepage from "./officials/OfficalsHomepage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const App = () => {
@@ -21,15 +20,6 @@ const App = () => {
           <Route path="/Login" element={<Login />} />
           <Route path="/Register" element={<Register />} />
 
-          {/* Protected Routes */}
-          <Route
-            path="/complete-profile"
-            element={
-              <ProtectedRoute>
-                <CompleteProfile />
-              </ProtectedRoute>
-            }
-          />
 
           {/* Role-specific Routes */}
           <Route
