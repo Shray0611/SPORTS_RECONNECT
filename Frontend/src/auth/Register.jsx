@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Eye,
   EyeOff,
@@ -10,12 +11,20 @@ import {
   Calendar,
   Users,
   ArrowRight,
+  AlertCircle,
+  CheckCircle,
 } from "lucide-react";
+import apiService from "./services/api";
+import { decodeToken, getRedirectPath } from "./utils/jwt";
 
 export default function RegisterPage() {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [userType, setUserType] = useState("official");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -43,6 +52,8 @@ export default function RegisterPage() {
       ...prev,
       [field]: value,
     }));
+    // Clear error when user starts typing
+    if (error) setError("");
   };
 
   const handleSportsChange = (sport) => {
@@ -54,8 +65,96 @@ export default function RegisterPage() {
     }));
   };
 
-  const handleSubmit = () => {
-    console.log("Registration attempt:", { userType, ...formData });
+  const validateForm = () => {
+    // Basic validation
+    if (!formData.firstName || !formData.lastName) {
+      setError("First name and last name are required");
+      return false;
+    }
+
+    if (!formData.email) {
+      setError("Email is required");
+      return false;
+    }
+
+    if (!formData.password) {
+      setError("Password is required");
+      return false;
+    }
+
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return false;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      return false;
+    }
+
+    if (!formData.location) {
+      setError("Location is required");
+      return false;
+    }
+
+    if (formData.sports.length === 0) {
+      setError("Please select at least one sport");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      // Prepare user data for API
+      const userData = {
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        password: formData.password,
+        role: userType,
+        // Additional fields that might be useful for the backend
+        phone: formData.phone,
+        location: formData.location,
+        sports: formData.sports,
+        experience: formData.experience,
+        organization: formData.organization,
+      };
+
+      const response = await apiService.register(userData);
+
+      // Store token and user info
+      apiService.setToken(response.token);
+
+      setSuccess("Account created successfully! Redirecting...");
+
+      // Decode JWT to get user role
+      const decodedToken = decodeToken(response.token);
+
+      if (!decodedToken || !decodedToken.role) {
+        throw new Error("Invalid token received");
+      }
+
+      // Get redirect path based on role
+      const redirectPath = getRedirectPath(decodedToken.role);
+
+      // Redirect to appropriate dashboard after a short delay
+      setTimeout(() => {
+        navigate(redirectPath);
+      }, 2000);
+    } catch (error) {
+      setError(error.message || "Registration failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const sportsOptions = [
@@ -79,9 +178,7 @@ export default function RegisterPage() {
             >
               Create Account
             </h2>
-            <p className="text-gray-600">
-              Join the GameOfficialsHub community
-            </p>
+            <p className="text-gray-600">Join the GameOfficialsHub community</p>
           </div>
 
           {/* User Type Selection */}
@@ -99,9 +196,7 @@ export default function RegisterPage() {
                     : "text-gray-600 hover:text-gray-800"
                 }`}
                 style={
-                  userType === "official"
-                    ? { backgroundColor: "#0B405B" }
-                    : {}
+                  userType === "official" ? { backgroundColor: "#0B405B" } : {}
                 }
               >
                 <Users className="h-4 w-4 inline mr-2" />
@@ -116,9 +211,7 @@ export default function RegisterPage() {
                     : "text-gray-600 hover:text-gray-800"
                 }`}
                 style={
-                  userType === "organizer"
-                    ? { backgroundColor: "#0B405B" }
-                    : {}
+                  userType === "organizer" ? { backgroundColor: "#0B405B" } : {}
                 }
               >
                 <Calendar className="h-4 w-4 inline mr-2" />
@@ -127,12 +220,28 @@ export default function RegisterPage() {
             </div>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center">
+              <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+              <span className="text-red-700 text-sm">{error}</span>
+            </div>
+          )}
+
+          {/* Success Message */}
+          {success && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center">
+              <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+              <span className="text-green-700 text-sm">{success}</span>
+            </div>
+          )}
+
           <div className="space-y-6">
             {/* Name Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  First Name
+                  First Name *
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -145,13 +254,14 @@ export default function RegisterPage() {
                     }
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent transition-all duration-200"
                     placeholder="First name"
+                    disabled={isLoading}
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Last Name
+                  Last Name *
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -164,6 +274,7 @@ export default function RegisterPage() {
                     }
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent transition-all duration-200"
                     placeholder="Last name"
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -173,7 +284,7 @@ export default function RegisterPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
+                  Email Address *
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -181,11 +292,10 @@ export default function RegisterPage() {
                     type="email"
                     required
                     value={formData.email}
-                    onChange={(e) =>
-                      handleInputChange("email", e.target.value)
-                    }
+                    onChange={(e) => handleInputChange("email", e.target.value)}
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent transition-all duration-200"
                     placeholder="Enter your email"
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -198,13 +308,11 @@ export default function RegisterPage() {
                   <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <input
                     type="tel"
-                    required
                     value={formData.phone}
-                    onChange={(e) =>
-                      handleInputChange("phone", e.target.value)
-                    }
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent transition-all duration-200"
-                    placeholder="Phone number"
+                    placeholder="Enter phone number"
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -213,7 +321,7 @@ export default function RegisterPage() {
             {/* Location */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Location
+                Location *
               </label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -225,7 +333,8 @@ export default function RegisterPage() {
                     handleInputChange("location", e.target.value)
                   }
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent transition-all duration-200"
-                  placeholder="City, State"
+                  placeholder="Enter your city/location"
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -234,8 +343,8 @@ export default function RegisterPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 {userType === "official"
-                  ? "Sports You Officiate"
-                  : "Sports You Organize"}
+                  ? "Sports You Officiate *"
+                  : "Sports You Organize *"}
               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {sportsOptions.map((sport) => (
@@ -243,6 +352,7 @@ export default function RegisterPage() {
                     key={sport}
                     type="button"
                     onClick={() => handleSportsChange(sport)}
+                    disabled={isLoading}
                     className={`p-3 rounded-lg border-2 transition-all duration-200 text-sm font-medium ${
                       formData.sports.includes(sport)
                         ? "border-transparent text-white"
@@ -272,6 +382,7 @@ export default function RegisterPage() {
                     handleInputChange("experience", e.target.value)
                   }
                   className="w-full py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent transition-all duration-200"
+                  disabled={isLoading}
                 >
                   <option value="">Select experience level</option>
                   <option value="1-2">1-2 years</option>
@@ -293,6 +404,7 @@ export default function RegisterPage() {
                   }
                   className="w-full py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent transition-all duration-200"
                   placeholder="Enter organization name"
+                  disabled={isLoading}
                 />
               </div>
             )}
@@ -301,7 +413,7 @@ export default function RegisterPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
+                  Password *
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -313,12 +425,14 @@ export default function RegisterPage() {
                       handleInputChange("password", e.target.value)
                     }
                     className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent transition-all duration-200"
-                    placeholder="Create password"
+                    placeholder="Create password (min 6 chars)"
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={togglePasswordVisibility}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    disabled={isLoading}
                   >
                     {showPassword ? (
                       <EyeOff className="h-5 w-5" />
@@ -331,7 +445,7 @@ export default function RegisterPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Confirm Password
+                  Confirm Password *
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -344,11 +458,13 @@ export default function RegisterPage() {
                     }
                     className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent transition-all duration-200"
                     placeholder="Confirm password"
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={toggleConfirmPasswordVisibility}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    disabled={isLoading}
                   >
                     {showConfirmPassword ? (
                       <EyeOff className="h-5 w-5" />
@@ -367,6 +483,7 @@ export default function RegisterPage() {
                 type="checkbox"
                 required
                 className="h-4 w-4 mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                disabled={isLoading}
               />
               <label
                 htmlFor="terms"
@@ -395,11 +512,21 @@ export default function RegisterPage() {
             <button
               type="button"
               onClick={handleSubmit}
-              className="w-full flex items-center justify-center py-4 px-4 rounded-lg text-white font-semibold transition-all duration-200 hover:opacity-90 transform hover:scale-105 shadow-lg"
+              disabled={isLoading}
+              className="w-full flex items-center justify-center py-4 px-4 rounded-lg text-white font-semibold transition-all duration-200 hover:opacity-90 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ backgroundColor: "#94D82A" }}
             >
-              Create Account
-              <ArrowRight className="ml-2 h-5 w-5" />
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                  Creating Account...
+                </>
+              ) : (
+                <>
+                  Create Account
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </>
+              )}
             </button>
           </div>
 
@@ -421,6 +548,7 @@ export default function RegisterPage() {
           <div className="text-center">
             <button
               type="button"
+              onClick={() => navigate("/Login")}
               className="w-full py-3 px-4 border-2 rounded-lg font-semibold transition-all duration-200 hover:bg-gray-50"
               style={{ borderColor: "#0B405B", color: "#0B405B" }}
             >
