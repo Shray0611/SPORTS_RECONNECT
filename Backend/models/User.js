@@ -31,30 +31,14 @@ const userSchema = new mongoose.Schema(
       default: "official",
       required: true,
     },
-    phone: {
-      type: String,
-      trim: true,
-    },
-    location: {
-      type: String,
-      trim: true,
-    },
-    sports: {
-      type: [String],
-      default: [],
-    },
-    experience: {
-      type: String,
-      trim: true,
-    },
-    organization: {
-      type: String,
-      trim: true,
-    },
-    certifications: {
-      type: [String],
-      default: [],
-    },
+    phone: { type: String, trim: true },
+    location: { type: String, trim: true },
+    dateOfBirth: { type: String, trim: true }, // for officials
+    dateOfEstablishment: { type: String, trim: true }, // for organizers
+    sports: { type: [String], default: [] },
+    experience: { type: String, trim: true },
+    organization: { type: String, trim: true },
+    certifications: { type: [String], default: [] },
   },
   {
     timestamps: true,

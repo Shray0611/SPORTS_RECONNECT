@@ -19,6 +19,8 @@ router.post("/register", async (req, res) => {
       experience,
       organization,
       certifications,
+      dateOfBirth,
+      dateOfEstablishment,
     } = req.body;
 
     // Validate required fields
@@ -55,6 +57,10 @@ router.post("/register", async (req, res) => {
       experience,
       organization,
       certifications,
+      ...(role === "official" && dateOfBirth ? { dateOfBirth } : {}),
+      ...(role === "organizer" && dateOfEstablishment
+        ? { dateOfEstablishment }
+        : {}),
     });
 
     await user.save();

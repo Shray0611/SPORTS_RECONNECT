@@ -1,16 +1,16 @@
 import React, { useEffect } from "react";
-import { logout } from "../utils/auth";
+import apiService from "../services/api";
 import { useNavigate } from "react-router-dom";
 
 const AdminPanel = () => {
   const navigate = useNavigate();
   const handleLogout = () => {
-    logout();
+    apiService.logout();
     navigate("/");
   };
   useEffect(() => {
     const handlePopState = () => {
-      logout();
+      apiService.logout();
       window.location.href = "/";
     };
     window.addEventListener("popstate", handlePopState);

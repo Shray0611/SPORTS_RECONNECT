@@ -4,7 +4,7 @@ import { Menu, X, LogOut, User, Crown } from "lucide-react";
 import Login from "../auth/Login";
 import Register from "../auth/Register";
 import zemoLogo from "../assets/zemo_logo.jpg";
-import { logout, isAuthenticated, getCurrentUser } from "../utils/auth";
+import apiService from "../services/api";
 import { decodeToken, getRedirectPath } from "../utils/jwt";
 
 const Navbar = () => {
@@ -17,9 +17,10 @@ const Navbar = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        if (isAuthenticated()) {
-          const userData = await getCurrentUser();
-          setUser(userData);
+        const token = apiService.getToken();
+        if (token) {
+          const response = await apiService.getCurrentUser();
+          setUser(response.user);
         }
       } catch (error) {
         console.error("Error checking auth:", error);
@@ -27,7 +28,6 @@ const Navbar = () => {
         setIsLoading(false);
       }
     };
-
     checkAuth();
   }, [location.pathname]);
 
@@ -36,7 +36,7 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    logout();
+    apiService.logout();
     setUser(null);
     navigate("/");
   };

@@ -19,7 +19,7 @@ import {
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { logout } from "../utils/auth";
+import apiService from "../services/api";
 import { useNavigate } from "react-router-dom";
 
 // Initialize localizer for react-big-calendar
@@ -51,16 +51,19 @@ const OfficialDashboard = () => {
     title: "Available",
     status: "available",
   });
+  const [officialData, setOfficialData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
   const handleLogout = () => {
-    logout();
+    apiService.logout();
     navigate("/");
   };
 
   useEffect(() => {
     const handlePopState = () => {
-      logout();
+      apiService.logout();
       window.location.href = "/";
     };
     window.addEventListener("popstate", handlePopState);
@@ -69,19 +72,24 @@ const OfficialDashboard = () => {
     };
   }, []);
 
-  // Mock data
-  const officialData = {
-    name: "John Smith",
-    sports: ["Football", "Basketball"],
-    rating: 4.8,
-    location: "Mumbai, Maharashtra",
-    experience: "5 years",
-    certifications: ["FIFA Level 2", "NBA Licensed"],
-    totalMatches: 127,
-    upcomingBookings: 3,
-    pendingRequests: 2,
-  };
+  useEffect(() => {
+    // Fetch real official data on mount
+    const fetchOfficialData = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const response = await apiService.getCurrentUser();
+        setOfficialData(response.user);
+      } catch (err) {
+        setError("Failed to load profile data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOfficialData();
+  }, []);
 
+  // Mock data
   const recentBookings = [
     {
       id: 1,
@@ -215,7 +223,7 @@ const OfficialDashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Welcome back, {officialData.name}!
+              Welcome back, {officialData?.name || "Officials"}!
             </h1>
             <p className="text-gray-600 mt-1">
               Here's what's happening with your officiating schedule
@@ -223,7 +231,9 @@ const OfficialDashboard = () => {
           </div>
           <div className="flex items-center space-x-2 text-yellow-500">
             <Star className="w-5 h-5 fill-current" />
-            <span className="font-semibold">{officialData.rating}</span>
+            <span className="font-semibold">
+              {officialData?.rating || "N/A"}
+            </span>
           </div>
         </div>
       </div>
@@ -238,7 +248,7 @@ const OfficialDashboard = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Matches</p>
               <p className="text-2xl font-bold text-gray-900">
-                {officialData.totalMatches}
+                {officialData?.totalMatches || "N/A"}
               </p>
             </div>
           </div>
@@ -255,7 +265,7 @@ const OfficialDashboard = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Upcoming</p>
               <p className="text-2xl font-bold text-gray-900">
-                {officialData.upcomingBookings}
+                {officialData?.upcomingBookings || "N/A"}
               </p>
             </div>
           </div>
@@ -271,7 +281,7 @@ const OfficialDashboard = () => {
                 Pending Requests
               </p>
               <p className="text-2xl font-bold text-gray-900">
-                {officialData.pendingRequests}
+                {officialData?.pendingRequests || "N/A"}
               </p>
             </div>
           </div>
@@ -285,7 +295,7 @@ const OfficialDashboard = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Rating</p>
               <p className="text-2xl font-bold text-gray-900">
-                {officialData.rating}/5
+                {officialData?.rating || "N/A"}/5
               </p>
             </div>
           </div>
@@ -426,25 +436,27 @@ const OfficialDashboard = () => {
                     className="w-24 h-24 rounded-full border-4 border-white flex items-center justify-center text-2xl font-bold shadow-lg"
                     style={{ backgroundColor: "#94D82A", color: "#0B405B" }}
                   >
-                    {officialData.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
+                    {officialData?.name
+                      ? officialData.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                      : "O"}
                   </div>
                   <div className="pb-2">
                     <h1 className="text-2xl font-bold text-gray-900">
-                      {officialData.name}
+                      {officialData?.name || "Officials"}
                     </h1>
                     <p className="text-gray-600">
-                      {officialData.sports.join(" • ")}
+                      {officialData?.sports?.join(" • ") || "No sports listed"}
                     </p>
                     <div className="flex items-center mt-1">
                       <Star className="w-4 h-4 text-yellow-500 fill-current" />
                       <span className="ml-1 text-sm font-medium text-gray-700">
-                        {officialData.rating}/5
+                        {officialData?.rating || "N/A"}/5
                       </span>
                       <span className="ml-2 text-sm text-gray-500">
-                        ({officialData.totalMatches} matches)
+                        ({officialData?.totalMatches || "N/A"} matches)
                       </span>
                     </div>
                   </div>
@@ -472,37 +484,49 @@ const OfficialDashboard = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Full Name
                       </label>
-                      <p className="text-gray-900">{officialData.name}</p>
+                      <p className="text-gray-900">
+                        {officialData?.name || "N/A"}
+                      </p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Email
                       </label>
-                      <p className="text-gray-900">john.smith@email.com</p>
+                      <p className="text-gray-900">
+                        {officialData?.email || "N/A"}
+                      </p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Phone
                       </label>
-                      <p className="text-gray-900">+91 9876543210</p>
+                      <p className="text-gray-900">
+                        {officialData?.phone || "N/A"}
+                      </p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Date of Birth
                       </label>
-                      <p className="text-gray-900">March 15, 1985</p>
+                      <p className="text-gray-900">
+                        {officialData?.dateOfBirth || "N/A"}
+                      </p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Location
                       </label>
-                      <p className="text-gray-900">{officialData.location}</p>
+                      <p className="text-gray-900">
+                        {officialData?.location || "N/A"}
+                      </p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Experience
                       </label>
-                      <p className="text-gray-900">{officialData.experience}</p>
+                      <p className="text-gray-900">
+                        {officialData?.experience || "N/A"}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -513,7 +537,7 @@ const OfficialDashboard = () => {
                     Sports & Specializations
                   </h2>
                   <div className="space-y-4">
-                    {officialData.sports.map((sport, index) => (
+                    {officialData?.sports?.map((sport, index) => (
                       <div
                         key={index}
                         className="border border-gray-200 rounded-lg p-4"
@@ -561,13 +585,13 @@ const OfficialDashboard = () => {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center p-4 bg-gray-50 rounded-lg">
                       <div className="text-2xl font-bold text-gray-900">
-                        {officialData.totalMatches}
+                        {officialData?.totalMatches || "N/A"}
                       </div>
                       <div className="text-sm text-gray-600">Total Matches</div>
                     </div>
                     <div className="text-center p-4 bg-gray-50 rounded-lg">
                       <div className="text-2xl font-bold text-gray-900">
-                        {officialData.rating}
+                        {officialData?.rating || "N/A"}
                       </div>
                       <div className="text-sm text-gray-600">
                         Average Rating
@@ -596,7 +620,7 @@ const OfficialDashboard = () => {
                     Certifications
                   </h2>
                   <div className="space-y-3">
-                    {officialData.certifications.map((cert, index) => (
+                    {officialData?.certifications?.map((cert, index) => (
                       <div
                         key={index}
                         className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg"
@@ -853,6 +877,21 @@ const OfficialDashboard = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl font-semibold">Loading profile...</div>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl text-red-600 font-semibold">{error}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 flex">
       {sidebarOpen && (
@@ -889,17 +928,19 @@ const OfficialDashboard = () => {
                 className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
                 style={{ backgroundColor: "#94D82A" }}
               >
-                {officialData.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")}
+                {officialData?.name
+                  ? officialData.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                  : "O"}
               </div>
               <div className="ml-3">
                 <p className="text-sm font-medium text-white">
-                  {officialData.name}
+                  {officialData?.name || "Officials"}
                 </p>
                 <p className="text-xs text-blue-200">
-                  {officialData.sports.join(", ")}
+                  {officialData?.sports?.join(", ") || "No sports listed"}
                 </p>
               </div>
             </div>
@@ -927,9 +968,9 @@ const OfficialDashboard = () => {
                   <Icon className="w-5 h-5 mr-3" />
                   {item.label}
                   {item.id === "requests" &&
-                    officialData.pendingRequests > 0 && (
+                    officialData?.pendingRequests > 0 && (
                       <span className="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                        {officialData.pendingRequests}
+                        {officialData?.pendingRequests || "0"}
                       </span>
                     )}
                 </button>
@@ -948,13 +989,13 @@ const OfficialDashboard = () => {
             <div className="flex items-center justify-between text-sm text-blue-200">
               <span>Experience</span>
               <span className="text-white font-medium">
-                {officialData.experience}
+                {officialData?.experience || "N/A"}
               </span>
             </div>
             <div className="flex items-center justify-between text-sm text-blue-200 mt-2">
               <span>Location</span>
               <span className="text-white font-medium text-xs">
-                {officialData.location.split(",")[0]}
+                {officialData?.location?.split(",")[0] || "N/A"}
               </span>
             </div>
           </div>
@@ -973,9 +1014,9 @@ const OfficialDashboard = () => {
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <Bell className="w-6 h-6 text-gray-600" />
-                {officialData.pendingRequests > 0 && (
+                {officialData?.pendingRequests > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {officialData.pendingRequests}
+                    {officialData?.pendingRequests || "0"}
                   </span>
                 )}
               </div>
@@ -983,10 +1024,12 @@ const OfficialDashboard = () => {
                 className="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold"
                 style={{ backgroundColor: "#0B405B" }}
               >
-                {officialData.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")}
+                {officialData?.name
+                  ? officialData.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                  : "O"}
               </div>
             </div>
           </div>
