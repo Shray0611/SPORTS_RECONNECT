@@ -1,0 +1,81 @@
+const express = require('express');
+const jwt = require('jsonwebtoken');
+const { auth, requireRole } = require('../middleware/auth');
+
+const router = express.Router();
+
+// Hardcoded admin credentials
+const ADMIN_EMAIL = 'admin@sportsreconnect.com';
+const ADMIN_PASSWORD = 'admin123456';
+
+// Admin login route
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Check hardcoded admin credentials
+    if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
+      return res.status(401).json({ message: 'Invalid admin credentials' });
+    }
+
+    // Generate JWT token for admin
+    const token = jwt.sign(
+      { 
+        userId: 'admin', 
+        role: 'admin',
+        email: ADMIN_EMAIL 
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      message: 'Admin login successful',
+      user: {
+        name: 'System Administrator',
+        email: ADMIN_EMAIL,
+        role: 'admin'
+      },
+      token
+    });
+
+  } catch (error) {
+    console.error('Admin login error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Protected admin route - requires admin role
+router.get('/dashboard', auth, requireRole(['admin']), async (req, res) => {
+  try {
+    res.json({
+      message: 'Welcome to admin dashboard',
+      user: req.user,
+      adminData: {
+        totalUsers: 'This would be fetched from database',
+        systemStats: 'This would contain system statistics'
+      }
+    });
+  } catch (error) {
+    console.error('Admin dashboard error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get all users (admin only)
+router.get('/users', auth, requireRole(['admin']), async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const users = await User.find({}).select('-password');
+    
+    res.json({
+      message: 'Users retrieved successfully',
+      users
+    });
+  } catch (error) {
+    console.error('Get users error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+module.exports = router; 
