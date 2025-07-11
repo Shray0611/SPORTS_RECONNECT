@@ -252,4 +252,42 @@ router.get("/me", authMiddleware, async (req, res) => {
   }
 });
 
+// PUT /api/me - Update current user profile (protected route)
+router.put("/me", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const updateFields = {};
+    const allowedFields = [
+      "name",
+      "phone",
+      "location",
+      "dateOfBirth",
+      "experience",
+      "sports",
+      "certifications",
+      "organization",
+      "dateOfEstablishment",
+    ];
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        updateFields[field] = req.body[field];
+      }
+    });
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateFields },
+      { new: true }
+    ).select("-password");
+    res.json({
+      message: "Profile updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({
+      message: "Server error while updating profile",
+    });
+  }
+});
+
 module.exports = router;

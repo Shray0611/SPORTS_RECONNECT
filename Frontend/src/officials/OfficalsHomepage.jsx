@@ -54,6 +54,10 @@ const OfficialDashboard = () => {
   const [officialData, setOfficialData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState(null);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState("");
 
   const navigate = useNavigate();
   const handleLogout = () => {
@@ -214,6 +218,40 @@ const OfficialDashboard = () => {
       display: "block",
     };
     return { style };
+  };
+
+  const handleEditProfile = () => {
+    setEditForm({
+      name: officialData?.name || "",
+      phone: officialData?.phone || "",
+      location: officialData?.location || "",
+      dateOfBirth: officialData?.dateOfBirth || "",
+      experience: officialData?.experience || "",
+      sports: officialData?.sports || [],
+      certifications: officialData?.certifications || [],
+      organization: officialData?.organization || "",
+    });
+    setShowEditModal(true);
+    setEditError("");
+  };
+
+  const handleEditInputChange = (field, value) => {
+    setEditForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleEditProfileSubmit = async (e) => {
+    e.preventDefault();
+    setEditLoading(true);
+    setEditError("");
+    try {
+      const response = await apiService.updateProfile(editForm);
+      setOfficialData(response.user);
+      setShowEditModal(false);
+    } catch (err) {
+      setEditError(err.message || "Failed to update profile");
+    } finally {
+      setEditLoading(false);
+    }
   };
 
   const renderDashboardContent = () => (
@@ -464,6 +502,7 @@ const OfficialDashboard = () => {
                     <button
                       className="px-4 py-2 text-sm font-medium text-white rounded-md hover:opacity-90"
                       style={{ backgroundColor: "#0B405B" }}
+                      onClick={handleEditProfile}
                     >
                       Edit Profile
                     </button>
@@ -471,6 +510,108 @@ const OfficialDashboard = () => {
                 </div>
               </div>
             </div>
+
+            {/* Edit Profile Modal */}
+            {showEditModal && (
+              <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 w-full max-w-lg">
+                  <h2 className="text-xl font-bold mb-4">Edit Profile</h2>
+                  <form
+                    onSubmit={handleEditProfileSubmit}
+                    className="space-y-4"
+                  >
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Full Name
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.name}
+                        onChange={(e) =>
+                          handleEditInputChange("name", e.target.value)
+                        }
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Phone
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.phone}
+                        onChange={(e) =>
+                          handleEditInputChange("phone", e.target.value)
+                        }
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Location
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.location}
+                        onChange={(e) =>
+                          handleEditInputChange("location", e.target.value)
+                        }
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Date of Birth
+                      </label>
+                      <input
+                        type="date"
+                        value={editForm.dateOfBirth}
+                        onChange={(e) =>
+                          handleEditInputChange("dateOfBirth", e.target.value)
+                        }
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Experience
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.experience}
+                        onChange={(e) =>
+                          handleEditInputChange("experience", e.target.value)
+                        }
+                        className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      />
+                    </div>
+                    {/* Add more fields as needed */}
+                    {editError && (
+                      <div className="text-red-600 text-sm">{editError}</div>
+                    )}
+                    <div className="flex justify-end space-x-3 mt-4">
+                      <button
+                        type="button"
+                        className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-md hover:bg-gray-50"
+                        onClick={() => setShowEditModal(false)}
+                        disabled={editLoading}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 text-sm font-medium text-white rounded-md"
+                        style={{ backgroundColor: "#0B405B" }}
+                        disabled={editLoading}
+                      >
+                        {editLoading ? "Saving..." : "Save"}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Personal Information */}
