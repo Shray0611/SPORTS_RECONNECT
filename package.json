@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "nodemailer": "^7.0.5",
     "react-big-calendar": "^1.19.4"
   }
 }

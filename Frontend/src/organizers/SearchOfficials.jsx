@@ -5,9 +5,7 @@ import apiService from "../services/api";
 export default function SearchOfficials() {
   const [filters, setFilters] = useState({
     sport: "",
-    role: "",
     city: "",
-    date: "",
   });
   const [selectedOfficial, setSelectedOfficial] = useState(null);
   const [officials, setOfficials] = useState([]);
@@ -60,9 +58,6 @@ export default function SearchOfficials() {
             .join(", ")
             .toLowerCase()
             .includes(filters.sport.toLowerCase()))) &&
-      (filters.role === "" ||
-        (official.role &&
-          official.role.toLowerCase().includes(filters.role.toLowerCase()))) &&
       (filters.city === "" ||
         (official.location &&
           official.location.toLowerCase().includes(filters.city.toLowerCase())))
@@ -156,7 +151,7 @@ export default function SearchOfficials() {
           <h3 className="text-xl font-bold text-gray-900 mb-4">
             🔧 Filter Officials
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="relative">
               <input
                 type="text"
@@ -171,26 +166,10 @@ export default function SearchOfficials() {
                 ⚽
               </span>
             </div>
-
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search by role..."
-                value={filters.role}
-                onChange={(e) =>
-                  setFilters({ ...filters, role: e.target.value })
-                }
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#94D82A] focus:border-transparent transition-all"
-              />
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                👔
-              </span>
-            </div>
-
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search by city..."
+                placeholder="Search by location..."
                 value={filters.city}
                 onChange={(e) =>
                   setFilters({ ...filters, city: e.target.value })
@@ -199,20 +178,6 @@ export default function SearchOfficials() {
               />
               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                 📍
-              </span>
-            </div>
-
-            <div className="relative">
-              <input
-                type="date"
-                value={filters.date}
-                onChange={(e) =>
-                  setFilters({ ...filters, date: e.target.value })
-                }
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#94D82A] focus:border-transparent transition-all"
-              />
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                📅
               </span>
             </div>
           </div>
