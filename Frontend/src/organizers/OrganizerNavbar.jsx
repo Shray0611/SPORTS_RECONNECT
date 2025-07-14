@@ -1,11 +1,11 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { logout } from "../utils/auth";
+import apiService from "../services/api";
 
 export default function OrganizerNavbar() {
   const navigate = useNavigate();
   const handleLogout = () => {
-    logout();
+    apiService.logout();
     navigate("/");
   };
   return (

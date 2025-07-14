@@ -37,6 +37,8 @@ export default function RegisterPage() {
     experience: "",
     organization: "",
     certifications: [],
+    dateOfBirth: "",
+    dateOfEstablishment: "",
   });
 
   const togglePasswordVisibility = () => {
@@ -121,6 +123,18 @@ export default function RegisterPage() {
         email: formData.email,
         password: formData.password,
         role: userType,
+        phone: formData.phone,
+        location: formData.location,
+        sports: formData.sports,
+        experience: formData.experience,
+        organization: formData.organization,
+        certifications: formData.certifications,
+        ...(userType === "official" && formData.dateOfBirth
+          ? { dateOfBirth: formData.dateOfBirth }
+          : {}),
+        ...(userType === "organizer" && formData.dateOfEstablishment
+          ? { dateOfEstablishment: formData.dateOfEstablishment }
+          : {}),
       };
 
       const response = await apiService.register(userData);
@@ -332,6 +346,43 @@ export default function RegisterPage() {
                 />
               </div>
             </div>
+
+            {/* Date of Birth for Officials / Date of Establishment for Organizers */}
+            {userType === "official" ? (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date of Birth *
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={formData.dateOfBirth}
+                  onChange={(e) =>
+                    handleInputChange("dateOfBirth", e.target.value)
+                  }
+                  className="w-full py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent transition-all duration-200"
+                  placeholder="YYYY-MM-DD"
+                  disabled={isLoading}
+                />
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date of Establishment *
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={formData.dateOfEstablishment}
+                  onChange={(e) =>
+                    handleInputChange("dateOfEstablishment", e.target.value)
+                  }
+                  className="w-full py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent transition-all duration-200"
+                  placeholder="YYYY-MM-DD"
+                  disabled={isLoading}
+                />
+              </div>
+            )}
 
             {/* Sports Selection */}
             <div>
