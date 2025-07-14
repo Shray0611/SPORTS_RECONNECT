@@ -1,96 +1,66 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import OrganizerNavbar from "./OrganizerNavbar";
-
-const dummyOfficials = [
-  {
-    id: 1,
-    name: "John Doe",
-    sport: "Football",
-    role: "Referee",
-    city: "Mumbai",
-    experience: "5 years",
-    certifications: "AIFF Certified",
-    availability: "Weekends",
-    rating: 4.8,
-    matches: 120,
-    phone: "+91 98765 43210",
-    email: "john.doe@email.com",
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    sport: "Cricket",
-    role: "Umpire",
-    city: "Pune",
-    experience: "3 years",
-    certifications: "BCCI Certified",
-    availability: "Weekdays",
-    rating: 4.6,
-    matches: 85,
-    phone: "+91 87654 32109",
-    email: "jane.smith@email.com",
-  },
-  {
-    id: 3,
-    name: "Amit Sharma",
-    sport: "Basketball",
-    role: "Referee",
-    city: "Delhi",
-    experience: "4 years",
-    certifications: "FIBA Certified",
-    availability: "Evenings",
-    rating: 4.9,
-    matches: 95,
-    phone: "+91 76543 21098",
-    email: "amit.sharma@email.com",
-  },
-  {
-    id: 4,
-    name: "Priya Patel",
-    sport: "Tennis",
-    role: "Line Judge",
-    city: "Mumbai",
-    experience: "6 years",
-    certifications: "ITF Certified",
-    availability: "Flexible",
-    rating: 4.7,
-    matches: 150,
-    phone: "+91 65432 10987",
-    email: "priya.patel@email.com",
-  },
-  {
-    id: 5,
-    name: "Rahul Kumar",
-    sport: "Football",
-    role: "Assistant Referee",
-    city: "Bangalore",
-    experience: "2 years",
-    certifications: "AIFF Certified",
-    availability: "Weekends",
-    rating: 4.4,
-    matches: 45,
-    phone: "+91 54321 09876",
-    email: "rahul.kumar@email.com",
-  },
-];
+import apiService from "../services/api";
 
 export default function SearchOfficials() {
   const [filters, setFilters] = useState({
     sport: "",
-    role: "",
     city: "",
-    date: "",
   });
   const [selectedOfficial, setSelectedOfficial] = useState(null);
+  const [officials, setOfficials] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [bookingError, setBookingError] = useState("");
+  const [bookingSuccess, setBookingSuccess] = useState("");
+  const [bookingForm, setBookingForm] = useState({
+    name: "",
+    date: "",
+    location: "",
+    sport: "",
+    details: "",
+    message: "",
+  });
 
-  const filteredOfficials = dummyOfficials.filter((official) => {
+  useEffect(() => {
+    const fetchOfficials = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const token = apiService.getToken();
+        const response = await fetch("http://localhost:5000/api/officials", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error("Failed to fetch officials");
+        }
+        const data = await response.json();
+        setOfficials(data.officials || []);
+      } catch (err) {
+        setError(err.message || "Error fetching officials");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOfficials();
+  }, []);
+
+  const filteredOfficials = officials.filter((official) => {
     return (
       (filters.sport === "" ||
-        official.sport.toLowerCase().includes(filters.sport.toLowerCase())) &&
-      (filters.role === "" ||
-        official.role.toLowerCase().includes(filters.role.toLowerCase())) &&
+        (official.sports &&
+          official.sports
+            .join(", ")
+            .toLowerCase()
+            .includes(filters.sport.toLowerCase()))) &&
       (filters.city === "" ||
-        official.city.toLowerCase().includes(filters.city.toLowerCase()))
+        (official.location &&
+          official.location.toLowerCase().includes(filters.city.toLowerCase())))
     );
   });
 
@@ -134,7 +104,7 @@ export default function SearchOfficials() {
                   Total Officials
                 </p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {dummyOfficials.length}
+                  {officials.length}
                 </p>
               </div>
               <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-white text-xl">
@@ -165,7 +135,9 @@ export default function SearchOfficials() {
                 <p className="text-gray-500 text-sm font-medium mb-1">
                   Sports Covered
                 </p>
-                <p className="text-2xl font-bold text-gray-900">4</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {new Set(officials.map((o) => o.sports).flat()).size}
+                </p>
               </div>
               <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center text-white text-xl">
                 🏆
@@ -179,7 +151,7 @@ export default function SearchOfficials() {
           <h3 className="text-xl font-bold text-gray-900 mb-4">
             🔧 Filter Officials
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="relative">
               <input
                 type="text"
@@ -194,26 +166,10 @@ export default function SearchOfficials() {
                 ⚽
               </span>
             </div>
-
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search by role..."
-                value={filters.role}
-                onChange={(e) =>
-                  setFilters({ ...filters, role: e.target.value })
-                }
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#94D82A] focus:border-transparent transition-all"
-              />
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                👔
-              </span>
-            </div>
-
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search by city..."
+                placeholder="Search by location..."
                 value={filters.city}
                 onChange={(e) =>
                   setFilters({ ...filters, city: e.target.value })
@@ -222,20 +178,6 @@ export default function SearchOfficials() {
               />
               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                 📍
-              </span>
-            </div>
-
-            <div className="relative">
-              <input
-                type="date"
-                value={filters.date}
-                onChange={(e) =>
-                  setFilters({ ...filters, date: e.target.value })
-                }
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#94D82A] focus:border-transparent transition-all"
-              />
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                📅
               </span>
             </div>
           </div>
@@ -248,14 +190,15 @@ export default function SearchOfficials() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center text-3xl">
-                    {getSportIcon(selectedOfficial.sport)}
+                    {getSportIcon(selectedOfficial.sports[0])}
                   </div>
                   <div>
                     <h2 className="text-3xl font-bold mb-2">
                       {selectedOfficial.name}
                     </h2>
                     <p className="text-blue-100 text-lg">
-                      {selectedOfficial.role} • {selectedOfficial.sport}
+                      {selectedOfficial.role} •{" "}
+                      {selectedOfficial.sports.join(", ")}
                     </p>
                   </div>
                 </div>
@@ -283,7 +226,7 @@ export default function SearchOfficials() {
                           Location:
                         </span>
                         <span className="ml-2 text-gray-900">
-                          {selectedOfficial.city}
+                          {selectedOfficial.location}
                         </span>
                       </div>
                       <div className="flex items-center">
@@ -366,7 +309,7 @@ export default function SearchOfficials() {
               {/* Action Buttons */}
               <div className="flex space-x-4 mt-8 pt-6 border-t border-gray-200">
                 <button
-                  onClick={() => alert("Booking request sent!")}
+                  onClick={() => setShowBookingModal(true)}
                   className="flex-1 bg-gradient-to-r from-[#94D82A] to-[#7BC226] text-[#0B405B] py-4 px-6 rounded-xl hover:shadow-lg transition-all duration-300 font-bold text-lg"
                 >
                   📅 Book Now
@@ -393,17 +336,41 @@ export default function SearchOfficials() {
             </div>
 
             <div className="p-8">
-              {filteredOfficials.length > 0 ? (
+              {loading ? (
+                <div className="text-center py-16">
+                  <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span className="text-4xl">⚙️</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                    Loading officials...
+                  </h3>
+                  <p className="text-gray-500 text-lg">
+                    Please wait while we fetch the officials.
+                  </p>
+                </div>
+              ) : error ? (
+                <div className="text-center py-16">
+                  <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span className="text-4xl">❌</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                    Error: {error}
+                  </h3>
+                  <p className="text-gray-500 text-lg">
+                    Failed to fetch officials. Please try again later.
+                  </p>
+                </div>
+              ) : filteredOfficials.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredOfficials.map((official) => (
                     <div
-                      key={official.id}
+                      key={official._id}
                       className="group border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 cursor-pointer bg-gradient-to-br from-white to-gray-50 hover:from-blue-50 hover:to-white"
                       onClick={() => setSelectedOfficial(official)}
                     >
                       <div className="flex items-center justify-between mb-4">
                         <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-2xl group-hover:bg-blue-200 transition-colors">
-                          {getSportIcon(official.sport)}
+                          {getSportIcon(official.sports[0])}
                         </div>
                         <div className="text-right">
                           <div className="text-sm text-gray-500">Rating</div>
@@ -421,12 +388,12 @@ export default function SearchOfficials() {
                         <div className="flex items-center text-gray-600">
                           <span className="mr-2">🏆</span>
                           <span className="text-sm">
-                            {official.sport} - {official.role}
+                            {official.sports.join(", ")} - {official.role}
                           </span>
                         </div>
                         <div className="flex items-center text-gray-600">
                           <span className="mr-2">📍</span>
-                          <span className="text-sm">{official.city}</span>
+                          <span className="text-sm">{official.location}</span>
                         </div>
                         <div className="flex items-center text-gray-600">
                           <span className="mr-2">⏱️</span>
@@ -462,6 +429,148 @@ export default function SearchOfficials() {
           </div>
         )}
       </main>
+
+      {/* Booking Modal */}
+      {showBookingModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-lg shadow-lg relative">
+            <button
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
+              onClick={() => setShowBookingModal(false)}
+            >
+              ✕
+            </button>
+            <h2 className="text-2xl font-bold mb-4 text-[#0B405B]">
+              Book Official
+            </h2>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setBookingLoading(true);
+                setBookingError("");
+                setBookingSuccess("");
+                try {
+                  const token = apiService.getToken();
+                  const response = await fetch(
+                    "http://localhost:5000/api/booking",
+                    {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify({
+                        officialId: selectedOfficial._id,
+                        event: {
+                          name: bookingForm.name,
+                          date: bookingForm.date,
+                          location: bookingForm.location,
+                          sport: bookingForm.sport,
+                          details: bookingForm.details,
+                        },
+                        message: bookingForm.message,
+                      }),
+                    }
+                  );
+                  if (!response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    throw new Error(
+                      data.message || "Failed to send booking request"
+                    );
+                  }
+                  setBookingSuccess("Booking request sent successfully!");
+                  setShowBookingModal(false);
+                  setBookingForm({
+                    name: "",
+                    date: "",
+                    location: "",
+                    sport: "",
+                    details: "",
+                    message: "",
+                  });
+                } catch (err) {
+                  setBookingError(
+                    err.message || "Error sending booking request"
+                  );
+                } finally {
+                  setBookingLoading(false);
+                }
+              }}
+              className="space-y-4"
+            >
+              <input
+                type="text"
+                placeholder="Event Name"
+                value={bookingForm.name}
+                onChange={(e) =>
+                  setBookingForm({ ...bookingForm, name: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                required
+              />
+              <input
+                type="date"
+                placeholder="Event Date"
+                value={bookingForm.date}
+                onChange={(e) =>
+                  setBookingForm({ ...bookingForm, date: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                required
+              />
+              <input
+                type="text"
+                placeholder="Location"
+                value={bookingForm.location}
+                onChange={(e) =>
+                  setBookingForm({ ...bookingForm, location: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                required
+              />
+              <input
+                type="text"
+                placeholder="Sport"
+                value={bookingForm.sport}
+                onChange={(e) =>
+                  setBookingForm({ ...bookingForm, sport: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                required
+              />
+              <textarea
+                placeholder="Event Details (optional)"
+                value={bookingForm.details}
+                onChange={(e) =>
+                  setBookingForm({ ...bookingForm, details: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+              />
+              <textarea
+                placeholder="Message to Official (optional)"
+                value={bookingForm.message}
+                onChange={(e) =>
+                  setBookingForm({ ...bookingForm, message: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+              />
+              {bookingError && (
+                <div className="text-red-600">{bookingError}</div>
+              )}
+              {bookingSuccess && (
+                <div className="text-green-600">{bookingSuccess}</div>
+              )}
+              <button
+                type="submit"
+                className="w-full bg-[#0B405B] text-white py-3 rounded-lg font-bold hover:bg-[#09405B] transition-colors"
+                disabled={bookingLoading}
+              >
+                {bookingLoading ? "Sending..." : "Send Booking Request"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

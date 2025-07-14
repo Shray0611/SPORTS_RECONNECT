@@ -1,8 +1,12 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import OrganizerNavbar from "./OrganizerNavbar";
 import apiService from "../services/api";
 
 export default function OrgDashboard() {
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   useEffect(() => {
     const handlePopState = () => {
       apiService.logout();
@@ -14,40 +18,31 @@ export default function OrgDashboard() {
     };
   }, []);
 
-  const bookings = [
-    {
-      id: 1,
-      match: "Football - Local League",
-      date: "2025-07-05",
-      status: "Confirmed",
-      venue: "City Stadium",
-      officials: 3,
-    },
-    {
-      id: 2,
-      match: "Cricket - College Cup",
-      date: "2025-07-10",
-      status: "Pending",
-      venue: "Sports Complex",
-      officials: 2,
-    },
-    {
-      id: 3,
-      match: "Basketball - City Championship",
-      date: "2025-07-12",
-      status: "Confirmed",
-      venue: "Metro Arena",
-      officials: 2,
-    },
-    {
-      id: 4,
-      match: "Tennis - Summer Tournament",
-      date: "2025-07-18",
-      status: "Cancelled",
-      venue: "Tennis Club",
-      officials: 1,
-    },
-  ];
+  useEffect(() => {
+    const fetchBookings = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const token = apiService.getToken();
+        const response = await fetch("http://localhost:5000/api/booking/sent", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error("Failed to fetch bookings");
+        }
+        const data = await response.json();
+        setBookings(data.bookings || []);
+      } catch (err) {
+        setError(err.message || "Error fetching bookings");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBookings();
+  }, []);
 
   const stats = [
     { label: "Total Bookings", value: "24", icon: "📅", color: "bg-blue-500" },
@@ -140,55 +135,100 @@ export default function OrgDashboard() {
           </div>
 
           <div className="p-8">
-            {bookings.length > 0 ? (
+            {loading ? (
+              <div className="text-center py-16">
+                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-4xl">⚙️</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  Loading bookings...
+                </h3>
+                <p className="text-gray-500 text-lg mb-8">
+                  Please wait while we fetch the latest booking requests.
+                </p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-16">
+                <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-4xl">❌</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  Error: {error}
+                </h3>
+                <p className="text-gray-500 text-lg mb-8">
+                  Failed to load booking requests. Please try again later.
+                </p>
+              </div>
+            ) : bookings.length > 0 ? (
               <div className="grid gap-6 lg:grid-cols-2">
                 {bookings.map((booking) => (
                   <div
-                    key={booking.id}
+                    key={booking._id}
                     className="group border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-white to-gray-50 hover:from-blue-50 hover:to-white"
                   >
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex-1">
                         <h3 className="text-xl font-bold text-gray-900 group-hover:text-[#0B405B] transition-colors mb-2">
-                          🏆 {booking.match}
+                          🏆 {booking.event?.name}{" "}
+                          <span className="text-sm text-gray-500">
+                            ({booking.event?.sport})
+                          </span>
                         </h3>
                         <div className="space-y-2">
                           <div className="flex items-center text-gray-600">
                             <span className="mr-2">📅</span>
                             <span className="font-medium">
-                              {new Date(booking.date).toLocaleDateString(
-                                "en-US",
-                                {
-                                  weekday: "long",
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                }
-                              )}
+                              {booking.event?.date
+                                ? new Date(
+                                    booking.event.date
+                                  ).toLocaleDateString("en-US", {
+                                    weekday: "long",
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                  })
+                                : "-"}
                             </span>
                           </div>
                           <div className="flex items-center text-gray-600">
                             <span className="mr-2">📍</span>
-                            <span>{booking.venue}</span>
+                            <span>{booking.event?.location || "-"}</span>
                           </div>
+                          {booking.event?.details && (
+                            <div className="flex items-center text-gray-600">
+                              <span className="mr-2">📝</span>
+                              <span>{booking.event.details}</span>
+                            </div>
+                          )}
                           <div className="flex items-center text-gray-600">
-                            <span className="mr-2">👥</span>
-                            <span>{booking.officials} Officials Assigned</span>
+                            <span className="mr-2">👤</span>
+                            <span>
+                              Official: {booking.official?.name || "-"} (
+                              {booking.official?.email || "-"})
+                            </span>
                           </div>
                         </div>
                       </div>
                       <div
-                        className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border ${getStatusColor(
-                          booking.status
-                        )}`}
+                        className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border ${
+                          booking.status === "accepted"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : booking.status === "pending"
+                            ? "bg-amber-50 text-amber-700 border-amber-200"
+                            : "bg-red-50 text-red-700 border-red-200"
+                        }`}
                       >
                         <span className="mr-2">
-                          {getStatusIcon(booking.status)}
+                          {booking.status === "accepted"
+                            ? "✅"
+                            : booking.status === "pending"
+                            ? "⏳"
+                            : "❌"}
                         </span>
-                        {booking.status}
+                        {booking.status.charAt(0).toUpperCase() +
+                          booking.status.slice(1)}
                       </div>
                     </div>
-
                     <div className="flex space-x-3 pt-4 border-t border-gray-100">
                       <button className="flex-1 bg-[#0B405B] text-white py-2 px-4 rounded-lg hover:bg-[#0a364d] transition-colors font-medium">
                         View Details

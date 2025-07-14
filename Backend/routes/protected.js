@@ -1,5 +1,27 @@
 const express = require('express');
 const { authMiddleware, roleMiddleware, rolesMiddleware } = require('../middleware/auth');
+const BookingRequest = require('../models/BookingRequest');
+const nodemailer = require('nodemailer');
+
+// Email utility
+const sendMail = async ({ to, subject, text, html }) => {
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    secure: process.env.SMTP_SECURE === 'true',
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    to,
+    subject,
+    text,
+    html,
+  });
+};
 
 const router = express.Router();
 
@@ -75,6 +97,109 @@ router.get('/management', authMiddleware, rolesMiddleware(['organizer', 'admin']
     access: 'Management features available',
     role: req.user.role
   });
+});
+
+// Organizer: Create a booking request for an official
+router.post('/booking', authMiddleware, roleMiddleware('organizer'), async (req, res) => {
+  try {
+    const { officialId, event, message } = req.body;
+    if (!officialId || !event || !event.name || !event.date || !event.location || !event.sport) {
+      return res.status(400).json({ message: 'Missing required booking details' });
+    }
+    const booking = new BookingRequest({
+      organizer: req.user._id,
+      official: officialId,
+      event,
+      message,
+      status: 'pending',
+    });
+    await booking.save();
+    // Send email to official
+    const User = require('../models/User');
+    const official = await User.findById(officialId);
+    if (official && official.email) {
+      await sendMail({
+        to: official.email,
+        subject: `New Booking Request for ${event.name}`,
+        text: `You have received a new booking request for ${event.name} (${event.sport}) on ${event.date} at ${event.location} from ${req.user.name} (${req.user.email}).\nMessage: ${message || 'No message provided.'}`,
+        html: `<p>You have received a new booking request for <b>${event.name}</b> (${event.sport}) on <b>${event.date}</b> at <b>${event.location}</b> from <b>${req.user.name}</b> (${req.user.email}).</p><p><b>Message:</b> ${message || 'No message provided.'}</p>`
+      });
+    }
+    res.status(201).json({ message: 'Booking request sent', booking });
+  } catch (error) {
+    console.error('Create booking error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Organizer: View all booking requests they have made
+router.get('/booking/sent', authMiddleware, roleMiddleware('organizer'), async (req, res) => {
+  try {
+    const bookings = await BookingRequest.find({ organizer: req.user._id })
+      .populate('official', '-password')
+      .sort({ createdAt: -1 });
+    res.json({ bookings });
+  } catch (error) {
+    console.error('Get sent bookings error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Official: View all incoming booking requests
+router.get('/booking/received', authMiddleware, roleMiddleware('official'), async (req, res) => {
+  try {
+    const bookings = await BookingRequest.find({ official: req.user._id })
+      .populate('organizer', '-password')
+      .sort({ createdAt: -1 });
+    res.json({ bookings });
+  } catch (error) {
+    console.error('Get received bookings error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Official: Accept or reject a booking request
+router.patch('/booking/:id', authMiddleware, roleMiddleware('official'), async (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!['accepted', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+    const booking = await BookingRequest.findOne({ _id: req.params.id, official: req.user._id }).populate('organizer', '-password');
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking request not found' });
+    }
+    booking.status = status;
+    await booking.save();
+    // Send email to organizer if accepted
+    if (status === 'accepted' && booking.organizer && booking.organizer.email) {
+      await sendMail({
+        to: booking.organizer.email,
+        subject: `Booking Accepted: ${booking.event.name}`,
+        text: `Your booking request for ${booking.event.name} (${booking.event.sport}) on ${booking.event.date} at ${booking.event.location} has been accepted by ${req.user.name} (${req.user.email}).`,
+        html: `<p>Your booking request for <b>${booking.event.name}</b> (${booking.event.sport}) on <b>${booking.event.date}</b> at <b>${booking.event.location}</b> has been <b>accepted</b> by <b>${req.user.name}</b> (${req.user.email}).</p>`
+      });
+    }
+    res.json({ message: `Booking request ${status}`, booking });
+  } catch (error) {
+    console.error('Update booking status error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Route for organizers to get all officials
+router.get('/officials', authMiddleware, roleMiddleware('organizer'), async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const officials = await User.find({ role: 'official' }).select('-password');
+    res.json({
+      message: 'Officials retrieved successfully',
+      officials
+    });
+  } catch (error) {
+    console.error('Get officials error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
 });
 
 module.exports = router; 
