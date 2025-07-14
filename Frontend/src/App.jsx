@@ -9,6 +9,10 @@ import Login from "./auth/Login";
 import Register from "./auth/Register";
 import OfficalsHomepage from "./officials/OfficalsHomepage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Dashboard from "./admin/Dashboard";
+import RegisteredOfficials from "./admin/RegisteredOfficials";
+import ApproveDeclineProfiles from "./admin/ApproveDeclineProfiles";
+import ManualBookingManagement from "./admin/ManualBookingManagement";
 
 const App = () => {
   return (
@@ -47,35 +51,13 @@ const App = () => {
                 <AdminPanel />
               </ProtectedRoute>
             }
-          />
-
-          {/* Legacy Routes - Redirect to new structure */}
-          <Route
-            path="/OfficalsHomepage"
-            element={
-              <ProtectedRoute allowedRoles={["official"]}>
-                <OfficalsHomepage />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/OrgDashboard"
-            element={
-              <ProtectedRoute allowedRoles={["organizer"]}>
-                <OrgDashboard />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/admin-panel"
-            element={
-              <ProtectedRoute allowedRoles={["admin"]}>
-                <AdminPanel />
-              </ProtectedRoute>
-            }
-          />
+          >
+            <Route index element={<Dashboard />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="registered-officials" element={<RegisteredOfficials />} />
+            <Route path="approve-decline-profiles" element={<ApproveDeclineProfiles />} />
+            <Route path="manual-booking-management" element={<ManualBookingManagement />} />
+          </Route>
 
           {/* Multi-role Routes */}
           <Route

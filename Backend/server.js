@@ -26,6 +26,7 @@ mongoose.connect(process.env.MONGODB_URI || "mongodb+srv://Soham:Soham123@soham.
 // Routes
 app.use('/api', require('./routes/auth'));
 app.use('/api', require('./routes/protected'));
+app.use('/api/admin', require('./routes/admin'));
 
 // Health check route
 app.get('/api/health', (req, res) => {

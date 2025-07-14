@@ -163,6 +163,20 @@ class ApiService {
     }
   }
 
+  // Fetch all officials (admin only)
+  async getOfficials() {
+    try {
+      const response = await fetch(`${this.baseURL}/admin/officials`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error("Get officials error:", error);
+      throw error;
+    }
+  }
+
   // Store token in localStorage
   setToken(token) {
     localStorage.setItem("token", token);

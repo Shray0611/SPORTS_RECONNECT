@@ -78,4 +78,19 @@ router.get('/users', auth, requireRole(['admin']), async (req, res) => {
   }
 });
 
+// Get all officials (admin only)
+router.get('/officials', auth, requireRole(['admin']), async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const officials = await User.find({ role: 'official' }).select('-password');
+    res.json({
+      message: 'Officials retrieved successfully',
+      officials
+    });
+  } catch (error) {
+    console.error('Get officials error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 module.exports = router; 
