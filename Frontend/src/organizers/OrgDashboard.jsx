@@ -1,11 +1,11 @@
 import React, { useEffect } from "react";
 import OrganizerNavbar from "./OrganizerNavbar";
-import { logout } from "../utils/auth";
+import apiService from "../services/api";
 
 export default function OrgDashboard() {
   useEffect(() => {
     const handlePopState = () => {
-      logout();
+      apiService.logout();
       window.location.href = "/";
     };
     window.addEventListener("popstate", handlePopState);

@@ -5,7 +5,6 @@ import {
   decodeToken,
   getRedirectPath,
   isTokenExpired,
-  hasRole,
   hasAnyRole,
 } from "../utils/jwt";
 
