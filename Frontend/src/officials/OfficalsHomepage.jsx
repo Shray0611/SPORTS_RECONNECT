@@ -59,6 +59,12 @@ const OfficialDashboard = () => {
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
 
+  // Booking Requests State
+  const [bookingRequests, setBookingRequests] = useState([]);
+  const [bookingLoading, setBookingLoading] = useState(true);
+  const [bookingError, setBookingError] = useState("");
+  const [actionLoading, setActionLoading] = useState(""); // id of booking being acted on
+
   const navigate = useNavigate();
   const handleLogout = () => {
     apiService.logout();
@@ -91,6 +97,35 @@ const OfficialDashboard = () => {
       }
     };
     fetchOfficialData();
+  }, []);
+
+  useEffect(() => {
+    const fetchBookingRequests = async () => {
+      setBookingLoading(true);
+      setBookingError("");
+      try {
+        const token = apiService.getToken();
+        const response = await fetch(
+          "http://localhost:5000/api/booking/received",
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch booking requests");
+        }
+        const data = await response.json();
+        setBookingRequests(data.bookings || []);
+      } catch (err) {
+        setBookingError(err.message || "Error fetching booking requests");
+      } finally {
+        setBookingLoading(false);
+      }
+    };
+    fetchBookingRequests();
   }, []);
 
   // Mock data
@@ -156,8 +191,31 @@ const OfficialDashboard = () => {
     { id: "settings", icon: Settings, label: "Settings" },
   ];
 
-  const handleBookingAction = (requestId, action) => {
-    console.log(`${action} booking request ${requestId}`);
+  const handleBookingAction = async (id, status) => {
+    setActionLoading(id);
+    try {
+      const token = apiService.getToken();
+      const response = await fetch(`http://localhost:5000/api/booking/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to update booking status");
+      }
+      // Update UI
+      setBookingRequests((prev) =>
+        prev.map((req) => (req._id === id ? { ...req, status } : req))
+      );
+    } catch (err) {
+      alert(err.message || "Error updating booking status");
+    } finally {
+      setActionLoading("");
+    }
   };
 
   const getStatusColor = (status) => {
@@ -978,9 +1036,106 @@ const OfficialDashboard = () => {
             <h2 className="text-xl font-bold text-gray-900 mb-4">
               Booking Requests
             </h2>
-            <p className="text-gray-600">
-              Detailed booking requests management will be implemented here.
-            </p>
+            {bookingLoading ? (
+              <div className="text-center py-8">
+                <span className="text-4xl">⚙️</span>
+                <p className="text-gray-600 mt-2">
+                  Loading booking requests...
+                </p>
+              </div>
+            ) : bookingError ? (
+              <div className="text-center py-8">
+                <span className="text-4xl">❌</span>
+                <p className="text-red-600 mt-2">{bookingError}</p>
+              </div>
+            ) : bookingRequests.length === 0 ? (
+              <div className="text-center py-8">
+                <span className="text-4xl">📭</span>
+                <p className="text-gray-600 mt-2">
+                  No booking requests at the moment.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {bookingRequests.map((req) => (
+                  <div
+                    key={req._id}
+                    className="bg-white rounded-xl shadow p-6 border border-gray-100"
+                  >
+                    <div className="mb-2 flex justify-between items-center">
+                      <div>
+                        <span className="font-bold text-lg text-[#0B405B]">
+                          {req.event.name}
+                        </span>
+                        <span className="ml-2 text-sm text-gray-500">
+                          ({req.event.sport})
+                        </span>
+                      </div>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          req.status === "pending"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : req.status === "accepted"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {req.status.charAt(0).toUpperCase() +
+                          req.status.slice(1)}
+                      </span>
+                    </div>
+                    <div className="text-gray-700 mb-2">
+                      <div>
+                        <b>Date:</b> {req.event.date}
+                      </div>
+                      <div>
+                        <b>Location:</b> {req.event.location}
+                      </div>
+                      {req.event.details && (
+                        <div>
+                          <b>Details:</b> {req.event.details}
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-gray-600 mb-2">
+                      <b>Organizer:</b> {req.organizer?.name} (
+                      {req.organizer?.email})
+                    </div>
+                    {req.message && (
+                      <div className="mb-2 text-gray-500 italic">
+                        "{req.message}"
+                      </div>
+                    )}
+                    {req.status === "pending" && (
+                      <div className="flex space-x-4 mt-4">
+                        <button
+                          className="flex-1 bg-green-500 text-white py-2 rounded-lg font-bold hover:bg-green-600 transition-colors"
+                          onClick={() =>
+                            handleBookingAction(req._id, "accepted")
+                          }
+                          disabled={actionLoading === req._id}
+                        >
+                          {actionLoading === req._id
+                            ? "Accepting..."
+                            : "Accept"}
+                        </button>
+                        <button
+                          className="flex-1 bg-red-500 text-white py-2 rounded-lg font-bold hover:bg-red-600 transition-colors"
+                          onClick={() =>
+                            handleBookingAction(req._id, "rejected")
+                          }
+                          disabled={actionLoading === req._id}
+                        >
+                          {actionLoading === req._id
+                            ? "Rejecting..."
+                            : "Reject"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       case "certifications":
