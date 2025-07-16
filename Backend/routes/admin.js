@@ -1,6 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const { auth, requireRole } = require('../middleware/auth');
+const { authMiddleware, rolesMiddleware } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -46,7 +46,7 @@ router.post('/login', async (req, res) => {
 });
 
 // Protected admin route - requires admin role
-router.get('/dashboard', auth, requireRole(['admin']), async (req, res) => {
+router.get('/dashboard', authMiddleware, rolesMiddleware(['admin']), async (req, res) => {
   try {
     res.json({
       message: 'Welcome to admin dashboard',
@@ -63,7 +63,7 @@ router.get('/dashboard', auth, requireRole(['admin']), async (req, res) => {
 });
 
 // Get all users (admin only)
-router.get('/users', auth, requireRole(['admin']), async (req, res) => {
+router.get('/users', authMiddleware, rolesMiddleware(['admin']), async (req, res) => {
   try {
     const User = require('../models/User');
     const users = await User.find({}).select('-password');
@@ -79,7 +79,7 @@ router.get('/users', auth, requireRole(['admin']), async (req, res) => {
 });
 
 // Get all officials (admin only)
-router.get('/officials', auth, requireRole(['admin']), async (req, res) => {
+router.get('/officials', authMiddleware, rolesMiddleware(['admin']), async (req, res) => {
   try {
     const User = require('../models/User');
     const officials = await User.find({ role: 'official' }).select('-password');
