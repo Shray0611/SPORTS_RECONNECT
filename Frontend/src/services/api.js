@@ -177,6 +177,48 @@ class ApiService {
     }
   }
 
+  // Fetch all pending officials (admin only)
+  async getPendingOfficials() {
+    try {
+      const response = await fetch(`${this.baseURL}/admin/officials/pending`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error("Get pending officials error:", error);
+      throw error;
+    }
+  }
+
+  // Approve an official (admin only)
+  async approveOfficial(id) {
+    try {
+      const response = await fetch(`${this.baseURL}/admin/officials/${id}/approve`, {
+        method: "PATCH",
+        headers: this.getAuthHeaders(),
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error("Approve official error:", error);
+      throw error;
+    }
+  }
+
+  // Decline an official (admin only)
+  async declineOfficial(id) {
+    try {
+      const response = await fetch(`${this.baseURL}/admin/officials/${id}/decline`, {
+        method: "PATCH",
+        headers: this.getAuthHeaders(),
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error("Decline official error:", error);
+      throw error;
+    }
+  }
+
   // Store token in localStorage
   setToken(token) {
     localStorage.setItem("token", token);

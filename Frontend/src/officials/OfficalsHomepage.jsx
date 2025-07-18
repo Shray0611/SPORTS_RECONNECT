@@ -231,6 +231,20 @@ const OfficialDashboard = () => {
     }
   };
 
+  // Add this helper for status color
+  const getApprovalStatusColor = (status) => {
+    switch (status) {
+      case "approved":
+        return "text-green-600 bg-green-100";
+      case "pending":
+        return "text-yellow-600 bg-yellow-100";
+      case "rejected":
+        return "text-red-600 bg-red-100";
+      default:
+        return "text-gray-600 bg-gray-100";
+    }
+  };
+
   // Calendar event handlers
   const handleSelectSlot = useCallback(({ start, end }) => {
     setNewEvent({ start, end, title: "Available", status: "available" });
@@ -1189,7 +1203,7 @@ const OfficialDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen flex bg-gray-50">
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div
@@ -1331,7 +1345,35 @@ const OfficialDashboard = () => {
           </div>
         </div>
 
-        <main className="flex-1 p-6 overflow-y-auto">{renderContent()}</main>
+        <main className="flex-1 p-6 overflow-y-auto">
+          {/* Approval Status Section */}
+          {officialData && (
+            <div className={`mb-6 p-4 rounded shadow ${getApprovalStatusColor(officialData.approvalStatus)}`}>
+              <span className="font-semibold">Status: </span>
+              <span className="uppercase font-bold">{officialData.approvalStatus}</span>
+              {officialData.approvalStatus === "pending" && (
+                <div className="mt-2 text-yellow-700">
+                  Your account is pending approval. You will gain access to all functionalities once approved by the admin.
+                </div>
+              )}
+              {officialData.approvalStatus === "rejected" && (
+                <div className="mt-2 text-red-700">
+                  Your account has been rejected. Please contact support for more information.
+                </div>
+              )}
+            </div>
+          )}
+          {/* Lock functionalities if not approved */}
+          {officialData && officialData.approvalStatus !== "approved" ? (
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded">
+              <div className="text-lg font-semibold mb-2">Access Restricted</div>
+              <div className="mb-4">Your account is not approved yet. Only your profile is accessible.</div>
+              {/* Optionally, render profile view here */}
+            </div>
+          ) : (
+            renderContent()
+          )}
+        </main>
       </div>
     </div>
   );
