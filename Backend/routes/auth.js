@@ -61,6 +61,7 @@ router.post("/register", async (req, res) => {
       ...(role === "organizer" && dateOfEstablishment
         ? { dateOfEstablishment }
         : {}),
+      ...(role === "official" ? { approvalStatus: "pending" } : {}),
     });
 
     await user.save();

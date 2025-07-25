@@ -23,6 +23,9 @@ export default function SearchOfficials() {
     details: "",
     message: "",
   });
+  const [officialAvailability, setOfficialAvailability] = useState([]);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [availabilityError, setAvailabilityError] = useState("");
 
   useEffect(() => {
     const fetchOfficials = async () => {
@@ -49,6 +52,25 @@ export default function SearchOfficials() {
     };
     fetchOfficials();
   }, []);
+
+  useEffect(() => {
+    if (!selectedOfficial?._id) {
+      setOfficialAvailability([]);
+      return;
+    }
+    setAvailabilityLoading(true);
+    setAvailabilityError("");
+    apiService
+      .getAvailability(selectedOfficial._id)
+      .then((data) => {
+        setOfficialAvailability(data);
+      })
+      .catch((err) => {
+        setAvailabilityError("Failed to fetch availability");
+        setOfficialAvailability([]);
+      })
+      .finally(() => setAvailabilityLoading(false));
+  }, [selectedOfficial?._id]);
 
   const filteredOfficials = officials.filter((official) => {
     return (
@@ -294,14 +316,28 @@ export default function SearchOfficials() {
                       </div>
                     </div>
                   </div>
-
                   <div className="bg-yellow-50 rounded-xl p-4">
                     <h4 className="font-bold text-yellow-800 mb-2">
                       🕒 Availability
                     </h4>
-                    <p className="text-yellow-700">
-                      {selectedOfficial.availability}
-                    </p>
+                    {availabilityLoading ? (
+                      <p className="text-yellow-700">Loading availability...</p>
+                    ) : availabilityError ? (
+                      <p className="text-red-600">{availabilityError}</p>
+                    ) : officialAvailability.length === 0 ? (
+                      <p className="text-yellow-700">
+                        No availability set by this official.
+                      </p>
+                    ) : (
+                      <ul className="text-yellow-700 space-y-1">
+                        {officialAvailability.map((a) => (
+                          <li key={a._id}>
+                            {new Date(a.startDate).toLocaleString()} -{" "}
+                            {new Date(a.endDate).toLocaleString()}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 </div>
               </div>

@@ -177,6 +177,83 @@ class ApiService {
     }
   }
 
+  // Fetch all pending officials (admin only)
+  async getPendingOfficials() {
+    try {
+      const response = await fetch(`${this.baseURL}/admin/officials/pending`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error("Get pending officials error:", error);
+      throw error;
+    }
+  }
+
+  // Approve an official (admin only)
+  async approveOfficial(id) {
+    try {
+      const response = await fetch(`${this.baseURL}/admin/officials/${id}/approve`, {
+        method: "PATCH",
+        headers: this.getAuthHeaders(),
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error("Approve official error:", error);
+      throw error;
+    }
+  }
+
+  // Decline an official (admin only)
+  async declineOfficial(id) {
+    try {
+      const response = await fetch(`${this.baseURL}/admin/officials/${id}/decline`, {
+        method: "PATCH",
+        headers: this.getAuthHeaders(),
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error("Decline official error:", error);
+      throw error;
+    }
+  }
+
+  // Get official's availability
+  async getAvailability(officialId) {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${this.baseURL}/availability/${officialId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) throw new Error("Failed to fetch availability");
+      return await response.json();
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Add new availability
+  async addAvailability(data) {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${this.baseURL}/availability`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error("Failed to add availability");
+      return await response.json();
+    } catch (error) {
+      throw error;
+    }
+  }
+
   // Store token in localStorage
   setToken(token) {
     localStorage.setItem("token", token);

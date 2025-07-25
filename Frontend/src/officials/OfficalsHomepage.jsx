@@ -17,33 +17,130 @@ import {
   DollarSign,
 } from "lucide-react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
-import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import apiService from "../services/api";
-import { useNavigate } from "react-router-dom";
+import moment from "moment";
+import api from "../services/api";
 
-// Initialize localizer for react-big-calendar
-const localizer = momentLocalizer(moment);
+// Mock API service
+const mockApiService = {
+  getToken: () => "mock-token",
+  logout: () => {},
+  getCurrentUser: () =>
+    Promise.resolve({
+      user: {
+        _id: "1",
+        name: "John Smith",
+        email: "john@example.com",
+        phone: "+1234567890",
+        location: "Mumbai, Maharashtra",
+        dateOfBirth: "1985-06-15",
+        experience: "5 years",
+        sports: ["Football", "Basketball"],
+        certifications: ["FIFA Certified", "Basketball Official Level 2"],
+        organization: "Sports Officials Association",
+        rating: 4.8,
+        totalMatches: 125,
+        upcomingBookings: 3,
+        pendingRequests: 2,
+        approvalStatus: "approved",
+      },
+    }),
+  updateProfile: (data) =>
+    Promise.resolve({
+      user: {
+        _id: "1",
+        name: data.name,
+        email: "john@example.com",
+        phone: data.phone,
+        location: data.location,
+        dateOfBirth: data.dateOfBirth,
+        experience: data.experience,
+        sports: ["Football", "Basketball"],
+        certifications: ["FIFA Certified", "Basketball Official Level 2"],
+        organization: data.organization,
+        rating: 4.8,
+        totalMatches: 125,
+        upcomingBookings: 3,
+        pendingRequests: 2,
+        approvalStatus: "approved",
+      },
+    }),
+  get: (url) =>
+    Promise.resolve({
+      data: [
+        {
+          _id: "1",
+          start: new Date().toISOString(),
+          end: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+        },
+      ],
+    }),
+  post: (url, data) =>
+    Promise.resolve({
+      data: {
+        _id: Date.now().toString(),
+        start: data.start,
+        end: data.end,
+      },
+    }),
+};
+
+// Mock data
+const recentBookings = [
+  {
+    id: 1,
+    tournament: "Premier League Match",
+    venue: "Wembley Stadium",
+    date: "July 28, 2025",
+    time: "3:00 PM",
+    sport: "Football",
+    status: "confirmed",
+  },
+  {
+    id: 2,
+    tournament: "Basketball Championship",
+    venue: "Sports Complex",
+    date: "July 30, 2025",
+    time: "7:00 PM",
+    sport: "Basketball",
+    status: "pending",
+  },
+];
+
+const pendingRequests = [
+  {
+    id: 1,
+    tournament: "Youth Football Cup",
+    organizer: "Mumbai FC",
+    date: "August 5, 2025",
+    time: "4:00 PM",
+    fee: "₹2,500",
+  },
+  {
+    id: 2,
+    tournament: "Inter-School Basketball",
+    organizer: "Delhi Sports Club",
+    date: "August 8, 2025",
+    time: "6:00 PM",
+    fee: "₹1,800",
+  },
+];
+
+const sidebarItems = [
+  { id: "dashboard", label: "Dashboard", icon: BookOpen },
+  { id: "profile", label: "Profile", icon: User },
+  { id: "availability", label: "Availability", icon: CalendarIcon },
+  { id: "bookings", label: "My Bookings", icon: CheckCircle },
+  { id: "requests", label: "Booking Requests", icon: Bell },
+  { id: "certifications", label: "Certifications", icon: Award },
+  { id: "earnings", label: "Earnings", icon: DollarSign },
+  { id: "settings", label: "Settings", icon: Settings },
+];
 
 const OfficialDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [availabilityEvents, setAvailabilityEvents] = useState([
-    {
-      id: 1,
-      title: "Available",
-      start: new Date(2025, 6, 15, 9, 0),
-      end: new Date(2025, 6, 15, 17, 0),
-      status: "available",
-    },
-    {
-      id: 2,
-      title: "Available",
-      start: new Date(2025, 6, 20, 14, 0),
-      end: new Date(2025, 6, 20, 20, 0),
-      status: "available",
-    },
-  ]);
+  const [availabilities, setAvailabilities] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newEvent, setNewEvent] = useState({
     start: null,
@@ -63,18 +160,99 @@ const OfficialDashboard = () => {
   const [bookingRequests, setBookingRequests] = useState([]);
   const [bookingLoading, setBookingLoading] = useState(true);
   const [bookingError, setBookingError] = useState("");
-  const [actionLoading, setActionLoading] = useState(""); // id of booking being acted on
+  const [actionLoading, setActionLoading] = useState("");
 
-  const navigate = useNavigate();
   const handleLogout = () => {
-    apiService.logout();
-    navigate("/");
+    try {
+      // Clear local storage
+      localStorage.removeItem("token");
+      localStorage.removeItem("userRole");
+      localStorage.removeItem("userData");
+
+      // Redirect to home page
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "confirmed":
+        return "bg-green-100 text-green-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getApprovalStatusColor = (status) => {
+    switch (status) {
+      case "approved":
+        return "bg-green-100 border-green-400 text-green-700";
+      case "pending":
+        return "bg-yellow-100 border-yellow-400 text-yellow-700";
+      case "rejected":
+        return "bg-red-100 border-red-400 text-red-700";
+      default:
+        return "bg-gray-100 border-gray-400 text-gray-700";
+    }
+  };
+
+  const formatDateTime = (date) => {
+    if (!date) return "";
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  const handleBookingAction = async (id, action) => {
+    setActionLoading(id);
+    try {
+      // Mock API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Update the booking status
+      setBookingRequests((prev) =>
+        prev.map((req) => (req._id === id ? { ...req, status: action } : req))
+      );
+
+      alert(`Booking ${action} successfully`);
+    } catch (error) {
+      alert(`Failed to ${action} booking`);
+    } finally {
+      setActionLoading("");
+    }
+  };
+
+  // Helper to get today's date in yyyy-MM-ddTHH:mm format
+  const getTodayDateTimeLocal = () => {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    const hh = String(now.getHours()).padStart(2, "0");
+    const min = String(now.getMinutes()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+  };
+
+  // Helper to get the current/future availability (if any)
+  const getActiveAvailability = () => {
+    const now = new Date();
+    return availabilities.find((a) => a.end >= now);
   };
 
   useEffect(() => {
     const handlePopState = () => {
-      apiService.logout();
-      window.location.href = "/";
+      mockApiService.logout();
+      alert("Session ended");
     };
     window.addEventListener("popstate", handlePopState);
     return () => {
@@ -83,12 +261,11 @@ const OfficialDashboard = () => {
   }, []);
 
   useEffect(() => {
-    // Fetch real official data on mount
     const fetchOfficialData = async () => {
       setLoading(true);
       setError("");
       try {
-        const response = await apiService.getCurrentUser();
+        const response = await api.getCurrentUser();
         setOfficialData(response.user);
       } catch (err) {
         setError("Failed to load profile data");
@@ -104,21 +281,43 @@ const OfficialDashboard = () => {
       setBookingLoading(true);
       setBookingError("");
       try {
-        const token = apiService.getToken();
-        const response = await fetch(
-          "http://localhost:5000/api/booking/received",
+        // Mock booking requests
+        const mockBookings = [
           {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
+            _id: "1",
+            event: {
+              name: "Summer Championship",
+              sport: "Football",
+              date: "August 15, 2025",
+              location: "Sports Stadium",
+              details: "Final match of the tournament",
             },
-          }
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch booking requests");
-        }
-        const data = await response.json();
-        setBookingRequests(data.bookings || []);
+            organizer: {
+              name: "Sports Club Mumbai",
+              email: "contact@sportsmumbai.com",
+            },
+            status: "pending",
+            message:
+              "We need an experienced referee for our championship final.",
+          },
+          {
+            _id: "2",
+            event: {
+              name: "Youth Basketball League",
+              sport: "Basketball",
+              date: "August 20, 2025",
+              location: "Community Center",
+              details: "Semi-final match",
+            },
+            organizer: {
+              name: "Youth Sports Association",
+              email: "youth@sports.org",
+            },
+            status: "pending",
+            message: "Looking for a certified basketball official.",
+          },
+        ];
+        setBookingRequests(mockBookings);
       } catch (err) {
         setBookingError(err.message || "Error fetching booking requests");
       } finally {
@@ -128,127 +327,54 @@ const OfficialDashboard = () => {
     fetchBookingRequests();
   }, []);
 
-  // Mock data
-  const recentBookings = [
-    {
-      id: 1,
-      tournament: "Mumbai Premier League",
-      sport: "Football",
-      date: "2025-07-15",
-      time: "16:00",
-      status: "confirmed",
-      venue: "Cooperage Ground",
-    },
-    {
-      id: 2,
-      tournament: "State Basketball Championship",
-      sport: "Basketball",
-      date: "2025-07-20",
-      time: "14:30",
-      status: "confirmed",
-      venue: "NSCI Stadium",
-    },
-    {
-      id: 3,
-      tournament: "Inter-College Football",
-      sport: "Football",
-      date: "2025-07-25",
-      time: "10:00",
-      status: "confirmed",
-      venue: "Oval Maidan",
-    },
-  ];
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [availabilityError, setAvailabilityError] = useState("");
 
-  const pendingRequests = [
-    {
-      id: 1,
-      tournament: "Corporate League Finals",
-      sport: "Football",
-      date: "2025-08-05",
-      time: "18:00",
-      organizer: "SportsCorp Events",
-      fee: "₹5,000",
-    },
-    {
-      id: 2,
-      tournament: "Youth Basketball Cup",
-      sport: "Basketball",
-      date: "2025-08-10",
-      time: "15:30",
-      organizer: "Maharashtra Sports Council",
-      fee: "₹3,500",
-    },
-  ];
-
-  const sidebarItems = [
-    { id: "dashboard", icon: TrendingUp, label: "Dashboard" },
-    { id: "profile", icon: User, label: "My Profile" },
-    { id: "availability", icon: CalendarIcon, label: "Availability" },
-    { id: "bookings", icon: BookOpen, label: "My Bookings" },
-    { id: "requests", icon: Bell, label: "Booking Requests" },
-    { id: "certifications", icon: Award, label: "Certifications" },
-    { id: "earnings", icon: DollarSign, label: "Earnings" },
-    { id: "settings", icon: Settings, label: "Settings" },
-  ];
-
-  const handleBookingAction = async (id, status) => {
-    setActionLoading(id);
-    try {
-      const token = apiService.getToken();
-      const response = await fetch(`http://localhost:5000/api/booking/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status }),
-      });
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.message || "Failed to update booking status");
+  useEffect(() => {
+    const fetchAvailabilities = async () => {
+      if (!officialData?._id) return;
+      setAvailabilityLoading(true);
+      try {
+        const response = await api.getAvailability(officialData._id);
+        const formattedAvailabilities = response.map((availability) => ({
+          id: availability._id,
+          title: "Available",
+          start: new Date(availability.startDate),
+          end: new Date(availability.endDate),
+          backgroundColor: "#94D82A",
+          borderColor: "#0B405B",
+        }));
+        setAvailabilities(formattedAvailabilities);
+      } catch (error) {
+        setAvailabilityError("Failed to fetch availabilities");
+      } finally {
+        setAvailabilityLoading(false);
       }
-      // Update UI
-      setBookingRequests((prev) =>
-        prev.map((req) => (req._id === id ? { ...req, status } : req))
-      );
-    } catch (err) {
-      alert(err.message || "Error updating booking status");
-    } finally {
-      setActionLoading("");
+    };
+    fetchAvailabilities();
+  }, [officialData?._id]);
+
+  const handleAddEvent = async (e) => {
+    e.preventDefault();
+    if (!newEvent.start || !newEvent.end) {
+      alert("Please select both start and end times");
+      return;
     }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "confirmed":
-        return "text-green-600 bg-green-100";
-      case "pending":
-        return "text-yellow-600 bg-yellow-100";
-      case "rejected":
-        return "text-red-600 bg-red-100";
-      default:
-        return "text-gray-600 bg-gray-100";
-    }
-  };
-
-  // Calendar event handlers
-  const handleSelectSlot = useCallback(({ start, end }) => {
-    setNewEvent({ start, end, title: "Available", status: "available" });
-    setShowAddModal(true);
-  }, []);
-
-  const handleAddEvent = () => {
-    if (newEvent.start && newEvent.end) {
-      setAvailabilityEvents((prev) => [
-        ...prev,
-        {
-          id: prev.length + 1,
-          title: newEvent.title,
-          start: newEvent.start,
-          end: newEvent.end,
-          status: newEvent.status,
-        },
-      ]);
+    try {
+      const response = await api.addAvailability({
+        startDate: newEvent.start,
+        endDate: newEvent.end,
+        officialId: officialData._id,
+      });
+      const formattedEvent = {
+        id: response._id,
+        title: "Available",
+        start: new Date(response.startDate),
+        end: new Date(response.endDate),
+        backgroundColor: "#94D82A",
+        borderColor: "#0B405B",
+      };
+      setAvailabilities([formattedEvent]); // Only one active availability
       setShowAddModal(false);
       setNewEvent({
         start: null,
@@ -256,27 +382,26 @@ const OfficialDashboard = () => {
         title: "Available",
         status: "available",
       });
+    } catch (error) {
+      alert("Failed to add availability");
     }
   };
 
+  const handleSelectSlot = useCallback(
+    (slotInfo) => {
+      setNewEvent({
+        ...newEvent,
+        start: slotInfo.start,
+        end: slotInfo.end,
+      });
+      setShowAddModal(true);
+    },
+    [newEvent]
+  );
+
   const handleSelectEvent = useCallback((event) => {
-    // In real app, this would open an edit modal
     console.log("Selected event:", event);
   }, []);
-
-  const eventStyleGetter = (event) => {
-    const backgroundColor =
-      event.status === "available" ? "#94D82A" : "#0B405B";
-    const style = {
-      backgroundColor,
-      borderRadius: "5px",
-      opacity: 0.8,
-      color: "white",
-      border: "0px",
-      display: "block",
-    };
-    return { style };
-  };
 
   const handleEditProfile = () => {
     setEditForm({
@@ -302,7 +427,7 @@ const OfficialDashboard = () => {
     setEditLoading(true);
     setEditError("");
     try {
-      const response = await apiService.updateProfile(editForm);
+      const response = await mockApiService.updateProfile(editForm);
       setOfficialData(response.user);
       setShowEditModal(false);
     } catch (err) {
@@ -319,7 +444,7 @@ const OfficialDashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Welcome back, {officialData?.name || "Officials"}!
+              Welcome back, {officialData?.name || "Official"}!
             </h1>
             <p className="text-gray-600 mt-1">
               Here's what's happening with your officiating schedule
@@ -541,7 +666,7 @@ const OfficialDashboard = () => {
                   </div>
                   <div className="pb-2">
                     <h1 className="text-2xl font-bold text-gray-900">
-                      {officialData?.name || "Officials"}
+                      {officialData?.name || "Official"}
                     </h1>
                     <p className="text-gray-600">
                       {officialData?.sports?.join(" • ") || "No sports listed"}
@@ -572,7 +697,7 @@ const OfficialDashboard = () => {
             {/* Edit Profile Modal */}
             {showEditModal && (
               <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg p-6 w-full max-w-lg">
+                <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-screen overflow-y-auto">
                   <h2 className="text-xl font-bold mb-4">Edit Profile</h2>
                   <form
                     onSubmit={handleEditProfileSubmit}
@@ -584,7 +709,7 @@ const OfficialDashboard = () => {
                       </label>
                       <input
                         type="text"
-                        value={editForm.name}
+                        value={editForm?.name || ""}
                         onChange={(e) =>
                           handleEditInputChange("name", e.target.value)
                         }
@@ -598,7 +723,7 @@ const OfficialDashboard = () => {
                       </label>
                       <input
                         type="text"
-                        value={editForm.phone}
+                        value={editForm?.phone || ""}
                         onChange={(e) =>
                           handleEditInputChange("phone", e.target.value)
                         }
@@ -611,7 +736,7 @@ const OfficialDashboard = () => {
                       </label>
                       <input
                         type="text"
-                        value={editForm.location}
+                        value={editForm?.location || ""}
                         onChange={(e) =>
                           handleEditInputChange("location", e.target.value)
                         }
@@ -624,7 +749,7 @@ const OfficialDashboard = () => {
                       </label>
                       <input
                         type="date"
-                        value={editForm.dateOfBirth}
+                        value={editForm?.dateOfBirth || ""}
                         onChange={(e) =>
                           handleEditInputChange("dateOfBirth", e.target.value)
                         }
@@ -637,14 +762,13 @@ const OfficialDashboard = () => {
                       </label>
                       <input
                         type="text"
-                        value={editForm.experience}
+                        value={editForm?.experience || ""}
                         onChange={(e) =>
                           handleEditInputChange("experience", e.target.value)
                         }
                         className="w-full border border-gray-300 rounded-md px-3 py-2"
                       />
                     </div>
-                    {/* Add more fields as needed */}
                     {editError && (
                       <div className="text-red-600 text-sm">{editError}</div>
                     )}
@@ -861,7 +985,7 @@ const OfficialDashboard = () => {
                     <div className="flex items-center justify-between">
                       <span className="text-gray-700">Next Available</span>
                       <span className="text-sm text-gray-900">
-                        July 15, 2025
+                        July 28, 2025
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -924,96 +1048,135 @@ const OfficialDashboard = () => {
           </div>
         );
       case "availability":
+        const activeAvailability = getActiveAvailability();
         return (
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Availability Calendar
-            </h2>
-            <div className="mb-4">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-900">
+                Availability Calendar
+              </h2>
               <button
-                onClick={() => setShowAddModal(true)}
+                onClick={() => {
+                  if (activeAvailability) {
+                    setNewEvent({
+                      start: activeAvailability.start,
+                      end: activeAvailability.end,
+                      title: "Available",
+                      status: "available",
+                    });
+                  } else {
+                    setNewEvent({
+                      start: null,
+                      end: null,
+                      title: "Available",
+                      status: "available",
+                    });
+                  }
+                  setShowAddModal(true);
+                }}
                 className="px-4 py-2 text-sm font-medium text-white rounded-md"
                 style={{ backgroundColor: "#0B405B" }}
               >
-                Add Availability
+                {activeAvailability
+                  ? "Update Availability"
+                  : "Add Availability"}
               </button>
             </div>
             <Calendar
-              localizer={localizer}
-              events={availabilityEvents}
+              localizer={momentLocalizer(moment)}
+              events={availabilities}
               startAccessor="start"
               endAccessor="end"
               style={{ height: 500 }}
-              selectable
-              onSelectSlot={handleSelectSlot}
-              onSelectEvent={handleSelectEvent}
-              eventPropGetter={eventStyleGetter}
-              defaultView="month"
               views={["month", "week", "day"]}
+              defaultView="month"
+              selectable
+              onSelectSlot={(slotInfo) => {
+                const now = new Date();
+                now.setHours(0, 0, 0, 0);
+                if (slotInfo.start < now) {
+                  alert("Cannot select past dates");
+                  return;
+                }
+                setNewEvent({
+                  start: slotInfo.start,
+                  end: slotInfo.end,
+                  title: "Available",
+                  status: "available",
+                });
+                setShowAddModal(true);
+              }}
+              onSelectEvent={handleSelectEvent}
             />
+            {/* Add/Update Availability Modal */}
             {showAddModal && (
-              <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                 <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Add Availability
+                  <h3 className="text-lg font-semibold mb-4">
+                    {activeAvailability
+                      ? "Update Availability"
+                      : "Add Availability"}
                   </h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Start Time
-                      </label>
-                      <input
-                        type="datetime-local"
-                        value={
-                          newEvent.start
-                            ? moment(newEvent.start).format("YYYY-MM-DDTHH:mm")
-                            : ""
-                        }
-                        onChange={(e) =>
-                          setNewEvent({
-                            ...newEvent,
-                            start: new Date(e.target.value),
-                          })
-                        }
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                      />
+                  <form onSubmit={handleAddEvent}>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Start Date & Time
+                        </label>
+                        <input
+                          type="datetime-local"
+                          value={
+                            newEvent.start ? formatDateTime(newEvent.start) : ""
+                          }
+                          onChange={(e) =>
+                            setNewEvent({
+                              ...newEvent,
+                              start: new Date(e.target.value),
+                            })
+                          }
+                          className="w-full border border-gray-300 rounded-md p-2"
+                          required
+                          min={getTodayDateTimeLocal()}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          End Date & Time
+                        </label>
+                        <input
+                          type="datetime-local"
+                          value={
+                            newEvent.end ? formatDateTime(newEvent.end) : ""
+                          }
+                          onChange={(e) =>
+                            setNewEvent({
+                              ...newEvent,
+                              end: new Date(e.target.value),
+                            })
+                          }
+                          className="w-full border border-gray-300 rounded-md p-2"
+                          required
+                          min={getTodayDateTimeLocal()}
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        End Time
-                      </label>
-                      <input
-                        type="datetime-local"
-                        value={
-                          newEvent.end
-                            ? moment(newEvent.end).format("YYYY-MM-DDTHH:mm")
-                            : ""
-                        }
-                        onChange={(e) =>
-                          setNewEvent({
-                            ...newEvent,
-                            end: new Date(e.target.value),
-                          })
-                        }
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                      />
+                    <div className="mt-6 flex justify-end space-x-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowAddModal(false)}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 text-sm font-medium text-white rounded-md"
+                        style={{ backgroundColor: "#0B405B" }}
+                      >
+                        Save
+                      </button>
                     </div>
-                  </div>
-                  <div className="mt-6 flex justify-end space-x-3">
-                    <button
-                      onClick={() => setShowAddModal(false)}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleAddEvent}
-                      className="px-4 py-2 text-sm font-medium text-white rounded-md"
-                      style={{ backgroundColor: "#0B405B" }}
-                    >
-                      Save
-                    </button>
-                  </div>
+                  </form>
                 </div>
               </div>
             )}
@@ -1189,7 +1352,7 @@ const OfficialDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen flex bg-gray-50">
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div
@@ -1233,7 +1396,7 @@ const OfficialDashboard = () => {
               </div>
               <div className="ml-3">
                 <p className="text-sm font-medium text-white">
-                  {officialData?.name || "Officials"}
+                  {officialData?.name || "Official"}
                 </p>
                 <p className="text-xs text-blue-200">
                   {officialData?.sports?.join(", ") || "No sports listed"}
@@ -1331,7 +1494,47 @@ const OfficialDashboard = () => {
           </div>
         </div>
 
-        <main className="flex-1 p-6 overflow-y-auto">{renderContent()}</main>
+        <main className="flex-1 p-6 overflow-y-auto">
+          {/* Approval Status Section */}
+          {officialData && (
+            <div
+              className={`mb-6 p-4 rounded shadow ${getApprovalStatusColor(
+                officialData.approvalStatus
+              )}`}
+            >
+              <span className="font-semibold">Status: </span>
+              <span className="uppercase font-bold">
+                {officialData.approvalStatus}
+              </span>
+              {officialData.approvalStatus === "pending" && (
+                <div className="mt-2 text-yellow-700">
+                  Your account is pending approval. You will gain access to all
+                  functionalities once approved by the admin.
+                </div>
+              )}
+              {officialData.approvalStatus === "rejected" && (
+                <div className="mt-2 text-red-700">
+                  Your account has been rejected. Please contact support for
+                  more information.
+                </div>
+              )}
+            </div>
+          )}
+          {/* Lock functionalities if not approved */}
+          {officialData && officialData.approvalStatus !== "approved" ? (
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded">
+              <div className="text-lg font-semibold mb-2">
+                Access Restricted
+              </div>
+              <div className="mb-4">
+                Your account is not approved yet. Only your profile is
+                accessible.
+              </div>
+            </div>
+          ) : (
+            renderContent()
+          )}
+        </main>
       </div>
     </div>
   );

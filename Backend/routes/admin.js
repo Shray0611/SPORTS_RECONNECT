@@ -93,4 +93,57 @@ router.get('/officials', authMiddleware, rolesMiddleware(['admin']), async (req,
   }
 });
 
+// Get all pending officials (admin only)
+router.get('/officials/pending', authMiddleware, rolesMiddleware(['admin']), async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const pendingOfficials = await User.find({ role: 'official', approvalStatus: 'pending' }).select('-password');
+    res.json({
+      message: 'Pending officials retrieved successfully',
+      officials: pendingOfficials
+    });
+  } catch (error) {
+    console.error('Get pending officials error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Approve an official (admin only)
+router.patch('/officials/:id/approve', authMiddleware, rolesMiddleware(['admin']), async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const official = await User.findOneAndUpdate(
+      { _id: req.params.id, role: 'official' },
+      { approvalStatus: 'approved' },
+      { new: true }
+    ).select('-password');
+    if (!official) {
+      return res.status(404).json({ message: 'Official not found' });
+    }
+    res.json({ message: 'Official approved successfully', official });
+  } catch (error) {
+    console.error('Approve official error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Decline an official (admin only)
+router.patch('/officials/:id/decline', authMiddleware, rolesMiddleware(['admin']), async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const official = await User.findOneAndUpdate(
+      { _id: req.params.id, role: 'official' },
+      { approvalStatus: 'rejected' },
+      { new: true }
+    ).select('-password');
+    if (!official) {
+      return res.status(404).json({ message: 'Official not found' });
+    }
+    res.json({ message: 'Official declined successfully', official });
+  } catch (error) {
+    console.error('Decline official error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 module.exports = router; 

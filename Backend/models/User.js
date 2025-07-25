@@ -39,6 +39,14 @@ const userSchema = new mongoose.Schema(
     experience: { type: String, trim: true },
     organization: { type: String, trim: true },
     certifications: { type: [String], default: [] },
+    approvalStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: function() {
+        return this.role === "official" ? "pending" : "approved";
+      },
+      required: true,
+    },
   },
   {
     timestamps: true,
