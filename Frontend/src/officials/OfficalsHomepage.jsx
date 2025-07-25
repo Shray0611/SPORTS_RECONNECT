@@ -1049,38 +1049,70 @@ const OfficialDashboard = () => {
         );
       case "availability":
         const activeAvailability = getActiveAvailability();
+        const handleDeleteAvailability = async () => {
+          if (!officialData?._id || !activeAvailability) return;
+          if (
+            !window.confirm(
+              "Are you sure you want to delete your availability?"
+            )
+          )
+            return;
+          try {
+            await api.deleteAvailability(officialData._id);
+            setAvailabilities([]);
+            setShowAddModal(false);
+            setNewEvent({
+              start: null,
+              end: null,
+              title: "Available",
+              status: "available",
+            });
+          } catch (error) {
+            alert("Failed to delete availability");
+          }
+        };
         return (
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-gray-900">
                 Availability Calendar
               </h2>
-              <button
-                onClick={() => {
-                  if (activeAvailability) {
-                    setNewEvent({
-                      start: activeAvailability.start,
-                      end: activeAvailability.end,
-                      title: "Available",
-                      status: "available",
-                    });
-                  } else {
-                    setNewEvent({
-                      start: null,
-                      end: null,
-                      title: "Available",
-                      status: "available",
-                    });
-                  }
-                  setShowAddModal(true);
-                }}
-                className="px-4 py-2 text-sm font-medium text-white rounded-md"
-                style={{ backgroundColor: "#0B405B" }}
-              >
-                {activeAvailability
-                  ? "Update Availability"
-                  : "Add Availability"}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    if (activeAvailability) {
+                      setNewEvent({
+                        start: activeAvailability.start,
+                        end: activeAvailability.end,
+                        title: "Available",
+                        status: "available",
+                      });
+                    } else {
+                      setNewEvent({
+                        start: null,
+                        end: null,
+                        title: "Available",
+                        status: "available",
+                      });
+                    }
+                    setShowAddModal(true);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-white rounded-md"
+                  style={{ backgroundColor: "#0B405B" }}
+                >
+                  {activeAvailability
+                    ? "Update Availability"
+                    : "Add Availability"}
+                </button>
+                {activeAvailability && (
+                  <button
+                    onClick={handleDeleteAvailability}
+                    className="px-4 py-2 text-sm font-medium text-white rounded-md bg-red-600 hover:bg-red-700"
+                  >
+                    Delete Availability
+                  </button>
+                )}
+              </div>
             </div>
             <Calendar
               localizer={momentLocalizer(moment)}

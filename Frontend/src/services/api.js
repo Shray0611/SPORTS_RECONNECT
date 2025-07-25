@@ -194,10 +194,13 @@ class ApiService {
   // Approve an official (admin only)
   async approveOfficial(id) {
     try {
-      const response = await fetch(`${this.baseURL}/admin/officials/${id}/approve`, {
-        method: "PATCH",
-        headers: this.getAuthHeaders(),
-      });
+      const response = await fetch(
+        `${this.baseURL}/admin/officials/${id}/approve`,
+        {
+          method: "PATCH",
+          headers: this.getAuthHeaders(),
+        }
+      );
       return await this.handleResponse(response);
     } catch (error) {
       console.error("Approve official error:", error);
@@ -208,10 +211,13 @@ class ApiService {
   // Decline an official (admin only)
   async declineOfficial(id) {
     try {
-      const response = await fetch(`${this.baseURL}/admin/officials/${id}/decline`, {
-        method: "PATCH",
-        headers: this.getAuthHeaders(),
-      });
+      const response = await fetch(
+        `${this.baseURL}/admin/officials/${id}/decline`,
+        {
+          method: "PATCH",
+          headers: this.getAuthHeaders(),
+        }
+      );
       return await this.handleResponse(response);
     } catch (error) {
       console.error("Decline official error:", error);
@@ -223,11 +229,14 @@ class ApiService {
   async getAvailability(officialId) {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${this.baseURL}/availability/${officialId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${this.baseURL}/availability/${officialId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       if (!response.ok) throw new Error("Failed to fetch availability");
       return await response.json();
     } catch (error) {
@@ -248,6 +257,26 @@ class ApiService {
         body: JSON.stringify(data),
       });
       if (!response.ok) throw new Error("Failed to add availability");
+      return await response.json();
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Delete availability for an official
+  async deleteAvailability(officialId) {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `${this.baseURL}/availability/${officialId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!response.ok) throw new Error("Failed to delete availability");
       return await response.json();
     } catch (error) {
       throw error;

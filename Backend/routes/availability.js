@@ -49,4 +49,24 @@ router.get("/:officialId", async (req, res) => {
   }
 });
 
+// Delete current/future availability for an official
+router.delete("/:officialId", authMiddleware, async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const result = await Availability.findOneAndDelete({
+      official: req.params.officialId,
+      status: "available",
+      endDate: { $gte: today },
+    });
+    if (result) {
+      return res.status(200).json({ message: "Availability deleted" });
+    } else {
+      return res.status(404).json({ message: "No active availability found" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;

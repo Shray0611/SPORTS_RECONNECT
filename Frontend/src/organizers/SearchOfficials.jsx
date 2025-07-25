@@ -324,19 +324,31 @@ export default function SearchOfficials() {
                       <p className="text-yellow-700">Loading availability...</p>
                     ) : availabilityError ? (
                       <p className="text-red-600">{availabilityError}</p>
-                    ) : officialAvailability.length === 0 ? (
-                      <p className="text-yellow-700">
-                        No availability set by this official.
-                      </p>
                     ) : (
-                      <ul className="text-yellow-700 space-y-1">
-                        {officialAvailability.map((a) => (
-                          <li key={a._id}>
-                            {new Date(a.startDate).toLocaleString()} -{" "}
-                            {new Date(a.endDate).toLocaleString()}
-                          </li>
-                        ))}
-                      </ul>
+                      (() => {
+                        // Only show future/present availabilities
+                        const now = new Date();
+                        const futureAvail = officialAvailability.filter(
+                          (a) => new Date(a.endDate) >= now
+                        );
+                        if (futureAvail.length === 0) {
+                          return (
+                            <p className="text-yellow-700 font-semibold">
+                              Not available
+                            </p>
+                          );
+                        }
+                        return (
+                          <ul className="text-yellow-700 space-y-1">
+                            {futureAvail.map((a) => (
+                              <li key={a._id}>
+                                {new Date(a.startDate).toLocaleString()} -{" "}
+                                {new Date(a.endDate).toLocaleString()}
+                              </li>
+                            ))}
+                          </ul>
+                        );
+                      })()
                     )}
                   </div>
                 </div>
