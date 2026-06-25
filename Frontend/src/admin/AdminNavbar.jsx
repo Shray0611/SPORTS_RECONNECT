@@ -9,28 +9,32 @@ const NAV_ITEMS = [
 ];
 
 const AdminNavbar = ({ onLogout }) => (
-  <div className="w-64 bg-white p-4 shadow-lg flex flex-col min-h-screen">
-    <h3 className="text-lg font-bold mb-4">Admin Panel</h3>
-    <nav className="space-y-2 flex-1">
+  <nav className="bg-[#0B405B] text-white h-screen w-64 shadow-lg flex flex-col fixed top-0 left-0 p-6 font-sans">
+    <h1 className="text-2xl font-bold mb-8 tracking-tight">Admin Dashboard</h1>
+    <div className="flex flex-col gap-2 flex-1">
       {NAV_ITEMS.map((item) => (
         <NavLink
           key={item.key}
           to={item.to}
           className={({ isActive }) =>
-            `block w-full text-left p-2 rounded ${isActive ? "bg-[#94D82A] text-[#0B405B] font-semibold" : "bg-gray-200"}`
+            `block py-3 px-3 rounded font-medium transition-colors ${
+              isActive
+                ? "bg-[#94D82A] text-[#0B405B]"
+                : "hover:bg-[#0B405B]/50 hover:text-[#94D82A] text-white"
+            }`
           }
         >
           {item.label}
         </NavLink>
       ))}
-    </nav>
+    </div>
     <button
       onClick={onLogout}
-      className="bg-[#94D82A] text-[#0B405B] px-4 py-3 rounded-lg hover:opacity-90 transition-opacity font-semibold tracking-wide mt-4"
+      className="bg-[#94D82A] text-[#0B405B] px-4 py-3 rounded-lg hover:opacity-90 transition-opacity font-semibold tracking-wide mt-auto mb-4"
     >
       Logout
     </button>
-  </div>
+  </nav>
 );
 
 export default AdminNavbar;
