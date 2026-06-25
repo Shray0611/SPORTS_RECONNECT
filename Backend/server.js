@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
+const setupCronJobs = require('./utils/cron');
 
 const app = express();
 
@@ -22,6 +23,8 @@ mongoose
   )
   .then(() => {
     console.log("✅ Connected to MongoDB");
+    // Initialize Cron Jobs
+    setupCronJobs();
   })
   .catch((error) => {
     console.error("❌ MongoDB connection error:", error);
@@ -33,6 +36,8 @@ app.use("/api", require("./routes/auth"));
 app.use("/api", require("./routes/protected"));
 app.use("/api/admin", require("./routes/admin"));
 app.use("/api/availability", require("./routes/availability"));
+app.use("/api/reviews", require("./routes/reviews"));
+app.use("/api/chat", require("./routes/chat"));
 
 // Health check route
 app.get("/api/health", (req, res) => {

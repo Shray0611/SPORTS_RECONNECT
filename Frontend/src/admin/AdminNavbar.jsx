@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { key: "registered_officials", label: "Registered Officials", to: "/admin/registered-officials" },
   { key: "approve_decline_profiles", label: "Approve/Decline Profiles", to: "/admin/approve-decline-profiles" },
   { key: "manual_booking_management", label: "Manual Booking Management", to: "/admin/manual-booking-management" },
+  { key: "manage_reviews", label: "Manage Reviews", to: "/admin/reviews" },
 ];
 
 const AdminNavbar = ({ onLogout }) => (

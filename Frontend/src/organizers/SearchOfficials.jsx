@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import OrganizerNavbar from "./OrganizerNavbar";
 import apiService from "../services/api";
+import ChatInterface from "../components/ChatInterface";
 
 export default function SearchOfficials() {
   const [filters, setFilters] = useState({
@@ -27,6 +28,35 @@ export default function SearchOfficials() {
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [availabilityError, setAvailabilityError] = useState("");
 
+  // Review states
+  const [officialReviews, setOfficialReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsError, setReviewsError] = useState("");
+  const [reviewForm, setReviewForm] = useState({
+    rating: 5,
+    reviewText: "",
+    eventName: "",
+  });
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewSubmitError, setReviewSubmitError] = useState("");
+  const [reviewSubmitSuccess, setReviewSubmitSuccess] = useState("");
+
+  const [showChatInterface, setShowChatInterface] = useState(false);
+  const currentUser = JSON.parse(localStorage.getItem("userData") || "{}");
+  const [organizerBookings, setOrganizerBookings] = useState([]);
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const data = await apiService.getSentBookings();
+        setOrganizerBookings(data.bookings || []);
+      } catch (error) {
+        console.error("Failed to fetch organizer bookings", error);
+      }
+    };
+    fetchBookings();
+  }, []);
+
   useEffect(() => {
     const fetchOfficials = async () => {
       setLoading(true);
@@ -42,6 +72,27 @@ export default function SearchOfficials() {
     };
     fetchOfficials();
   }, []);
+
+  const fetchReviews = async (officialId) => {
+    setReviewsLoading(true);
+    setReviewsError("");
+    try {
+      const data = await apiService.getReviewsForOfficial(officialId);
+      setOfficialReviews(data.reviews || []);
+    } catch (err) {
+      setReviewsError(err.message || "Failed to fetch reviews");
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedOfficial?._id) {
+      setOfficialReviews([]);
+      return;
+    }
+    fetchReviews(selectedOfficial._id);
+  }, [selectedOfficial?._id]);
 
   useEffect(() => {
     if (!selectedOfficial?._id) {
@@ -344,6 +395,171 @@ export default function SearchOfficials() {
                 </div>
               </div>
 
+              {/* Reviews Section */}
+              <div className="mt-12 border-t border-gray-100 pt-8">
+                <h3 className="text-2xl font-bold text-[#0B405B] mb-6">
+                  ⭐ Reviews & Ratings
+                </h3>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {/* Reviews List (Columns span 2) */}
+                  <div className="lg:col-span-2 space-y-4">
+                    <h4 className="font-bold text-gray-800 text-lg mb-2">Organizer Reviews</h4>
+                    {reviewsLoading ? (
+                      <p className="text-gray-500">Loading reviews...</p>
+                    ) : reviewsError ? (
+                      <p className="text-red-500">{reviewsError}</p>
+                    ) : officialReviews.length === 0 ? (
+                      <p className="text-gray-500 italic">No reviews yet for this official. Be the first to write one!</p>
+                    ) : (
+                      <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2">
+                        {officialReviews.map((r) => (
+                          <div key={r._id} className="bg-gray-50 rounded-xl p-4 border border-gray-100 shadow-sm">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <span className="font-bold text-gray-900">{r.organizer?.name || "Anonymous Organizer"}</span>
+                                {r.eventName && (
+                                  <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full ml-2 font-medium">
+                                    {r.eventName}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-xs text-gray-400">
+                                {new Date(r.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <div className="text-yellow-500 mb-2 font-bold text-sm">
+                              {getRatingStars(r.rating)} <span className="text-gray-700 ml-1">({r.rating}.0)</span>
+                            </div>
+                            <p className="text-gray-700 text-sm italic">"{r.reviewText}"</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Submit Review Form (Columns span 1) */}
+                  <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 self-start shadow-sm">
+                    <h4 className="font-bold text-gray-900 text-lg mb-4">Write a Review</h4>
+                    {(() => {
+                      const canReview = organizerBookings.some(b => {
+                        return b.official?._id === selectedOfficial._id && 
+                               b.status === "accepted" && 
+                               new Date(b.event?.date) < new Date();
+                      });
+                      
+                      if (!canReview) {
+                        return (
+                          <div className="text-sm text-gray-600 bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                            <span className="block mb-2 text-xl">🔒</span>
+                            You can only review officials after an accepted event is completed. 
+                            If you have an upcoming event, please wait until the scheduled time is over to rate them.
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <form
+                          onSubmit={async (e) => {
+                            e.preventDefault();
+                            if (!reviewForm.reviewText) return;
+                            setReviewSubmitting(true);
+                            setReviewSubmitError("");
+                            setReviewSubmitSuccess("");
+                            try {
+                              await apiService.createReview({
+                                officialId: selectedOfficial._id,
+                                rating: Number(reviewForm.rating),
+                                reviewText: reviewForm.reviewText,
+                                eventName: reviewForm.eventName,
+                              });
+                              
+                              setReviewSubmitSuccess("Review submitted successfully!");
+                              setReviewForm({
+                                rating: 5,
+                                reviewText: "",
+                                eventName: "",
+                              });
+
+                              // Refresh reviews list
+                              await fetchReviews(selectedOfficial._id);
+                              
+                              // Refresh officials list
+                              const data = await apiService.getAllOfficials();
+                              setOfficials(data.officials || []);
+                              
+                              // Update selected official object to show new average rating
+                              const updated = (data.officials || []).find(o => o._id === selectedOfficial._id);
+                              if (updated) {
+                                setSelectedOfficial(updated);
+                              }
+                            } catch (err) {
+                              setReviewSubmitError(err.message || "Failed to submit review");
+                            } finally {
+                              setReviewSubmitting(false);
+                            }
+                          }}
+                          className="space-y-4"
+                        >
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1">RATING</label>
+                        <select
+                          value={reviewForm.rating}
+                          onChange={(e) => setReviewForm({ ...reviewForm, rating: Number(e.target.value) })}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-700 text-sm focus:ring-2 focus:ring-[#94D82A]"
+                        >
+                          <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+                          <option value="4">⭐⭐⭐⭐ (4/5)</option>
+                          <option value="3">⭐⭐⭐ (3/5)</option>
+                          <option value="2">⭐⭐ (2/5)</option>
+                          <option value="1">⭐ (1/5)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1">EVENT NAME (OPTIONAL)</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Football League Finals"
+                          value={reviewForm.eventName}
+                          onChange={(e) => setReviewForm({ ...reviewForm, eventName: e.target.value })}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#94D82A]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1">YOUR REVIEW</label>
+                        <textarea
+                          placeholder="Share your experience working with this official..."
+                          value={reviewForm.reviewText}
+                          onChange={(e) => setReviewForm({ ...reviewForm, reviewText: e.target.value })}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#94D82A]"
+                          rows="3"
+                          required
+                        />
+                      </div>
+
+                      {reviewSubmitError && (
+                        <p className="text-red-500 text-xs">{reviewSubmitError}</p>
+                      )}
+                      {reviewSubmitSuccess && (
+                        <p className="text-green-500 text-xs font-medium">{reviewSubmitSuccess}</p>
+                      )}
+
+                      <button
+                        type="submit"
+                        disabled={reviewSubmitting}
+                        className="w-full bg-[#0B405B] text-white py-2.5 rounded-lg hover:bg-[#0a364d] font-bold text-sm transition-colors"
+                      >
+                        {reviewSubmitting ? "Submitting..." : "Submit Review"}
+                      </button>
+                    </form>
+                    );
+                   })()}
+                  </div>
+                </div>
+              </div>
+
               {/* Action Buttons */}
               <div className="flex space-x-4 mt-8 pt-6 border-t border-gray-200">
                 <button
@@ -353,10 +569,10 @@ export default function SearchOfficials() {
                   📅 Book Now
                 </button>
                 <button
-                  onClick={() => alert("Message sent!")}
+                  onClick={() => setShowChatInterface(true)}
                   className="flex-1 border-2 border-[#0B405B] text-[#0B405B] py-4 px-6 rounded-xl hover:bg-[#0B405B] hover:text-white transition-all duration-300 font-bold text-lg"
                 >
-                  💬 Send Message
+                  💬 Chat
                 </button>
               </div>
             </div>
@@ -488,11 +704,24 @@ export default function SearchOfficials() {
                 setBookingError("");
                 setBookingSuccess("");
                 try {
+                  const selectedDateTime = new Date(`${bookingForm.date}T${bookingForm.time}`);
+                  
+                  // Validate availability frontend
+                  const isAvailable = officialAvailability.some(a => {
+                    const start = new Date(a.startDate);
+                    const end = new Date(a.endDate);
+                    return selectedDateTime >= start && selectedDateTime <= end;
+                  });
+
+                  if (!isAvailable) {
+                    throw new Error("This official is not available at the selected date and time.");
+                  }
+
                   await apiService.createBookingRequest({
                     officialId: selectedOfficial._id,
                     event: {
                       name: bookingForm.name,
-                      date: bookingForm.date,
+                      date: `${bookingForm.date}T${bookingForm.time}`,
                       location: bookingForm.location,
                       sport: bookingForm.sport,
                       details: bookingForm.details,
@@ -504,6 +733,7 @@ export default function SearchOfficials() {
                   setBookingForm({
                     name: "",
                     date: "",
+                    time: "",
                     location: "",
                     sport: "",
                     details: "",
@@ -529,16 +759,33 @@ export default function SearchOfficials() {
                 className="w-full border border-gray-300 rounded-lg px-4 py-2"
                 required
               />
-              <input
-                type="date"
-                placeholder="Event Date"
-                value={bookingForm.date}
-                onChange={(e) =>
-                  setBookingForm({ ...bookingForm, date: e.target.value })
-                }
-                className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                required
-              />
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">EVENT DATE</label>
+                  <input
+                    type="date"
+                    value={bookingForm.date}
+                    onChange={(e) =>
+                      setBookingForm({ ...bookingForm, date: e.target.value })
+                    }
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    min={new Date().toISOString().split("T")[0]}
+                    required
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">EVENT TIME</label>
+                  <input
+                    type="time"
+                    value={bookingForm.time}
+                    onChange={(e) =>
+                      setBookingForm({ ...bookingForm, time: e.target.value })
+                    }
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    required
+                  />
+                </div>
+              </div>
               <input
                 type="text"
                 placeholder="Location"
@@ -591,6 +838,13 @@ export default function SearchOfficials() {
             </form>
           </div>
         </div>
+      )}
+      {showChatInterface && selectedOfficial && (
+        <ChatInterface 
+          onClose={() => setShowChatInterface(false)} 
+          initialContact={selectedOfficial}
+          currentUserRole="organizer" 
+        />
       )}
     </div>
   );
