@@ -162,6 +162,8 @@ const OfficialDashboard = () => {
   const [bookingError, setBookingError] = useState("");
   const [actionLoading, setActionLoading] = useState("");
 
+  const [calendarDate, setCalendarDate] = useState(new Date());
+
   const handleLogout = () => {
     try {
       // Clear local storage
@@ -1120,8 +1122,27 @@ const OfficialDashboard = () => {
               startAccessor="start"
               endAccessor="end"
               style={{ height: 500 }}
-              views={["month", "week", "day"]}
+              views={["month"]}
               defaultView="month"
+              components={{ toolbar: CustomCalendarToolbar }}
+              date={calendarDate}
+              onNavigate={(actionOrDate, maybeDate) => {
+                // Support both (newDate) and (action, newDate) signatures
+                if (maybeDate instanceof Date) {
+                  setCalendarDate(maybeDate);
+                } else if (actionOrDate instanceof Date) {
+                  setCalendarDate(actionOrDate);
+                } else if (typeof actionOrDate === "string") {
+                  // Fallback: compute new date based on action
+                  let newDate = new Date(calendarDate);
+                  if (actionOrDate === "prev") {
+                    newDate.setMonth(newDate.getMonth() - 1);
+                  } else if (actionOrDate === "next") {
+                    newDate.setMonth(newDate.getMonth() + 1);
+                  }
+                  setCalendarDate(newDate);
+                }
+              }}
               selectable
               onSelectSlot={(slotInfo) => {
                 const now = new Date();
@@ -1568,6 +1589,27 @@ const OfficialDashboard = () => {
           )}
         </main>
       </div>
+    </div>
+  );
+};
+
+// Custom toolbar for Calendar
+const CustomCalendarToolbar = ({ label, onNavigate, date }) => {
+  return (
+    <div className="flex justify-between items-center mb-2">
+      <button
+        className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+        onClick={() => onNavigate("prev", date)}
+      >
+        Previous
+      </button>
+      <span className="font-semibold text-lg">{label}</span>
+      <button
+        className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+        onClick={() => onNavigate("next", date)}
+      >
+        Next
+      </button>
     </div>
   );
 };
