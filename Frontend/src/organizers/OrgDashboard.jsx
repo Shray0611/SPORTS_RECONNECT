@@ -23,17 +23,7 @@ export default function OrgDashboard() {
       setLoading(true);
       setError("");
       try {
-        const token = apiService.getToken();
-        const response = await fetch("http://localhost:5000/api/booking/sent", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch bookings");
-        }
-        const data = await response.json();
+        const data = await apiService.getSentBookings();
         setBookings(data.bookings || []);
       } catch (err) {
         setError(err.message || "Error fetching bookings");
@@ -44,11 +34,16 @@ export default function OrgDashboard() {
     fetchBookings();
   }, []);
 
+  const currentMonth = new Date().getMonth();
+  const bookingsThisMonth = bookings.filter(b => b.event?.date && new Date(b.event.date).getMonth() === currentMonth).length;
+  const confirmedBookings = bookings.filter(b => b.status === "accepted" || b.status === "confirmed").length;
+  const pendingBookings = bookings.filter(b => b.status === "pending").length;
+
   const stats = [
-    { label: "Total Bookings", value: "24", icon: "📅", color: "bg-blue-500" },
-    { label: "This Month", value: "8", icon: "📊", color: "bg-green-500" },
-    { label: "Confirmed", value: "18", icon: "✅", color: "bg-emerald-500" },
-    { label: "Pending", value: "4", icon: "⏳", color: "bg-yellow-500" },
+    { label: "Total Bookings", value: bookings.length.toString(), icon: "📅", color: "bg-blue-500" },
+    { label: "This Month", value: bookingsThisMonth.toString(), icon: "📊", color: "bg-green-500" },
+    { label: "Confirmed", value: confirmedBookings.toString(), icon: "✅", color: "bg-emerald-500" },
+    { label: "Pending", value: pendingBookings.toString(), icon: "⏳", color: "bg-yellow-500" },
   ];
 
   const getStatusColor = (status) => {

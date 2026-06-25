@@ -32,17 +32,7 @@ export default function SearchOfficials() {
       setLoading(true);
       setError("");
       try {
-        const token = apiService.getToken();
-        const response = await fetch("http://localhost:5000/api/officials", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch officials");
-        }
-        const data = await response.json();
+        const data = await apiService.getAllOfficials();
         setOfficials(data.officials || []);
       } catch (err) {
         setError(err.message || "Error fetching officials");
@@ -498,34 +488,17 @@ export default function SearchOfficials() {
                 setBookingError("");
                 setBookingSuccess("");
                 try {
-                  const token = apiService.getToken();
-                  const response = await fetch(
-                    "http://localhost:5000/api/booking",
-                    {
-                      method: "POST",
-                      headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                      },
-                      body: JSON.stringify({
-                        officialId: selectedOfficial._id,
-                        event: {
-                          name: bookingForm.name,
-                          date: bookingForm.date,
-                          location: bookingForm.location,
-                          sport: bookingForm.sport,
-                          details: bookingForm.details,
-                        },
-                        message: bookingForm.message,
-                      }),
-                    }
-                  );
-                  if (!response.ok) {
-                    const data = await response.json().catch(() => ({}));
-                    throw new Error(
-                      data.message || "Failed to send booking request"
-                    );
-                  }
+                  await apiService.createBookingRequest({
+                    officialId: selectedOfficial._id,
+                    event: {
+                      name: bookingForm.name,
+                      date: bookingForm.date,
+                      location: bookingForm.location,
+                      sport: bookingForm.sport,
+                      details: bookingForm.details,
+                    },
+                    message: bookingForm.message,
+                  });
                   setBookingSuccess("Booking request sent successfully!");
                   setShowBookingModal(false);
                   setBookingForm({
