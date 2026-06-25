@@ -43,7 +43,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["pending", "approved", "rejected"],
       default: function() {
-        return this.role === "official" ? "pending" : "approved";
+        return this.role === "admin" ? "approved" : "pending";
       },
       required: true,
     },

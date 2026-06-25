@@ -93,14 +93,14 @@ router.get('/officials', authMiddleware, rolesMiddleware(['admin']), async (req,
   }
 });
 
-// Get all pending officials (admin only)
+// Get all pending users (officials and organizers) (admin only)
 router.get('/officials/pending', authMiddleware, rolesMiddleware(['admin']), async (req, res) => {
   try {
     const User = require('../models/User');
-    const pendingOfficials = await User.find({ role: 'official', approvalStatus: 'pending' }).select('-password');
+    const pendingUsers = await User.find({ role: { $in: ['official', 'organizer'] }, approvalStatus: 'pending' }).select('-password');
     res.json({
-      message: 'Pending officials retrieved successfully',
-      officials: pendingOfficials
+      message: 'Pending users retrieved successfully',
+      officials: pendingUsers
     });
   } catch (error) {
     console.error('Get pending officials error:', error);
@@ -108,38 +108,38 @@ router.get('/officials/pending', authMiddleware, rolesMiddleware(['admin']), asy
   }
 });
 
-// Approve an official (admin only)
+// Approve a user (official/organizer) (admin only)
 router.patch('/officials/:id/approve', authMiddleware, rolesMiddleware(['admin']), async (req, res) => {
   try {
     const User = require('../models/User');
-    const official = await User.findOneAndUpdate(
-      { _id: req.params.id, role: 'official' },
+    const user = await User.findOneAndUpdate(
+      { _id: req.params.id, role: { $in: ['official', 'organizer'] } },
       { approvalStatus: 'approved' },
       { new: true }
     ).select('-password');
-    if (!official) {
-      return res.status(404).json({ message: 'Official not found' });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
-    res.json({ message: 'Official approved successfully', official });
+    res.json({ message: 'User approved successfully', official: user });
   } catch (error) {
     console.error('Approve official error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-// Decline an official (admin only)
+// Decline a user (official/organizer) (admin only)
 router.patch('/officials/:id/decline', authMiddleware, rolesMiddleware(['admin']), async (req, res) => {
   try {
     const User = require('../models/User');
-    const official = await User.findOneAndUpdate(
-      { _id: req.params.id, role: 'official' },
+    const user = await User.findOneAndUpdate(
+      { _id: req.params.id, role: { $in: ['official', 'organizer'] } },
       { approvalStatus: 'rejected' },
       { new: true }
     ).select('-password');
-    if (!official) {
-      return res.status(404).json({ message: 'Official not found' });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
-    res.json({ message: 'Official declined successfully', official });
+    res.json({ message: 'User declined successfully', official: user });
   } catch (error) {
     console.error('Decline official error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });

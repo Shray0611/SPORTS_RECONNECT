@@ -191,7 +191,7 @@ router.patch('/booking/:id', authMiddleware, roleMiddleware('official'), async (
 router.get('/officials', authMiddleware, roleMiddleware('organizer'), async (req, res) => {
   try {
     const User = require('../models/User');
-    const officials = await User.find({ role: 'official' }).select('-password');
+    const officials = await User.find({ role: 'official', approvalStatus: 'approved' }).select('-password');
     res.json({
       message: 'Officials retrieved successfully',
       officials

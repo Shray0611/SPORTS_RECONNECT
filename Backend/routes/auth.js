@@ -61,7 +61,7 @@ router.post("/register", async (req, res) => {
       ...(role === "organizer" && dateOfEstablishment
         ? { dateOfEstablishment }
         : {}),
-      ...(role === "official" ? { approvalStatus: "pending" } : {}),
+      approvalStatus: "pending",
     });
 
     await user.save();
@@ -211,6 +211,18 @@ router.post("/login", async (req, res) => {
     if (!isPasswordValid) {
       return res.status(401).json({
         message: "Invalid email or password",
+      });
+    }
+
+    // Check approval status
+    if (user.approvalStatus === "pending") {
+      return res.status(403).json({
+        message: "Your account is pending approval by an administrator.",
+      });
+    }
+    if (user.approvalStatus === "rejected") {
+      return res.status(403).json({
+        message: "Your account registration was declined.",
       });
     }
 
