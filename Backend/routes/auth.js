@@ -253,9 +253,17 @@ router.post("/login", async (req, res) => {
 // GET /api/me - Get current user profile (protected route)
 router.get("/me", authMiddleware, async (req, res) => {
   try {
+    const userObj = req.user.toObject();
+    if (req.user.role === "official") {
+      const { getOfficialStats } = require("../utils/stats");
+      const stats = await getOfficialStats(req.user._id);
+      userObj.rating = stats.rating;
+      userObj.totalMatches = stats.totalMatches;
+      userObj.reviewsCount = stats.reviewsCount;
+    }
     res.json({
       message: "User profile retrieved successfully",
-      user: req.user,
+      user: userObj,
     });
   } catch (error) {
     console.error("Get profile error:", error);

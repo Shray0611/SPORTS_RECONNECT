@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
+const setupCronJobs = require('./utils/cron');
 
 const app = express();
 
@@ -22,6 +23,8 @@ mongoose
   )
   .then(() => {
     console.log("✅ Connected to MongoDB");
+    // Initialize Cron Jobs
+    setupCronJobs();
   })
   .catch((error) => {
     console.error("❌ MongoDB connection error:", error);
@@ -33,6 +36,8 @@ app.use("/api", require("./routes/auth"));
 app.use("/api", require("./routes/protected"));
 app.use("/api/admin", require("./routes/admin"));
 app.use("/api/availability", require("./routes/availability"));
+app.use("/api/reviews", require("./routes/reviews"));
+app.use("/api/chat", require("./routes/chat"));
 
 // Health check route
 app.get("/api/health", (req, res) => {
@@ -84,9 +89,20 @@ app.use((error, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
   console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
   console.log(`👑 Admin Login: admin@gameofficials.com / Admin@123`);
+});
+
+server.on("error", (error) => {
+  if (error.code === "EADDRINUSE") {
+    console.error(`\n❌ Error: Port ${PORT} is already in use.`);
+    console.error(`💡 Tip: Another process (likely a previous instance of this server) is running on port ${PORT}.`);
+    console.error(`👉 You can free it up by running: taskkill /F /IM node.exe (on Windows) or killing the specific process.\n`);
+    process.exit(1);
+  } else {
+    console.error("Server error:", error);
+  }
 });

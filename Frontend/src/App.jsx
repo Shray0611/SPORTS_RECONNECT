@@ -13,6 +13,7 @@ import Dashboard from "./admin/Dashboard";
 import RegisteredOfficials from "./admin/RegisteredOfficials";
 import ApproveDeclineProfiles from "./admin/ApproveDeclineProfiles";
 import ManualBookingManagement from "./admin/ManualBookingManagement";
+import AdminReviews from "./admin/AdminReviews";
 
 const App = () => {
   return (
@@ -57,6 +58,7 @@ const App = () => {
             <Route path="registered-officials" element={<RegisteredOfficials />} />
             <Route path="approve-decline-profiles" element={<ApproveDeclineProfiles />} />
             <Route path="manual-booking-management" element={<ManualBookingManagement />} />
+            <Route path="reviews" element={<AdminReviews />} />
           </Route>
 
           {/* Multi-role Routes */}

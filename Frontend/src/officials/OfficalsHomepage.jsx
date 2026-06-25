@@ -20,9 +20,7 @@ import { Calendar, momentLocalizer } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import moment from "moment";
 import api from "../services/api";
-
-
-const sidebarItems = [
+import ChatInterface from "../components/ChatInterface";const sidebarItems = [
   { id: "dashboard", label: "Dashboard", icon: BookOpen },
   { id: "profile", label: "Profile", icon: User },
   { id: "availability", label: "Availability", icon: CalendarIcon },
@@ -59,6 +57,24 @@ const OfficialDashboard = () => {
   const [actionLoading, setActionLoading] = useState("");
 
   const [calendarDate, setCalendarDate] = useState(new Date());
+
+  // Review states
+  const [officialReviews, setOfficialReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewsError, setReviewsError] = useState("");
+  const [unreadChats, setUnreadChats] = useState(0);
+
+  // Chat states
+  const [showChatInterface, setShowChatInterface] = useState(false);
+  const [selectedOrganizer, setSelectedOrganizer] = useState(null);
+
+  const currentUser = JSON.parse(localStorage.getItem("userData") || "{}");
+
+  const openChat = async (organizer) => {
+    if (!organizer || !organizer._id) return;
+    setSelectedOrganizer(organizer);
+    setShowChatInterface(true);
+  };
 
   const handleLogout = () => {
     try {
@@ -187,6 +203,35 @@ const OfficialDashboard = () => {
       }
     };
     fetchBookingRequests();
+  }, []);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!officialData?._id) return;
+      setReviewsLoading(true);
+      setReviewsError("");
+      try {
+        const response = await api.getReviewsForOfficial(officialData._id);
+        setOfficialReviews(response.reviews || []);
+      } catch (err) {
+        setReviewsError(err.message || "Error fetching reviews");
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+    fetchReviews();
+  }, [officialData?._id]);
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const res = await api.get('/chat/unread');
+        setUnreadChats(res.count || 0);
+      } catch (err) {
+        console.error("Failed to fetch unread chats", err);
+      }
+    };
+    fetchUnread();
   }, []);
 
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
@@ -318,29 +363,29 @@ const OfficialDashboard = () => {
           <div className="flex items-center space-x-2 text-yellow-500">
             <Star className="w-5 h-5 fill-current" />
             <span className="font-semibold">
-              {officialData?.rating || "N/A"}
+              {officialData?.rating || "Not Rated"}
             </span>
           </div>
         </div>
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="bg-white rounded-lg shadow-md p-4">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-blue-100">
               <BookOpen className="w-6 h-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Matches</p>
+              <p className="text-sm font-medium text-gray-600">Completed Matches</p>
               <p className="text-2xl font-bold text-gray-900">
-                {officialData?.totalMatches || recentBookings.length}
+                {recentBookings.filter(b => new Date(b.event?.date) < new Date()).length}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4">
           <div className="flex items-center">
             <div
               className="p-3 rounded-full"
@@ -357,7 +402,7 @@ const OfficialDashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-yellow-100">
               <Bell className="w-6 h-6 text-yellow-600" />
@@ -373,7 +418,7 @@ const OfficialDashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4">
           <div className="flex items-center">
             <div className="p-3 rounded-full bg-green-100">
               <Star className="w-6 h-6 text-green-600" />
@@ -381,7 +426,21 @@ const OfficialDashboard = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Rating</p>
               <p className="text-2xl font-bold text-gray-900">
-                {officialData?.rating || "N/A"}/5
+                {officialData?.rating ? `${officialData.rating}/5` : "Not Rated"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <div className="flex items-center">
+            <div className="p-3 rounded-full bg-red-100">
+              <Bell className="w-6 h-6 text-red-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Unread Chats</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {unreadChats}
               </p>
             </div>
           </div>
@@ -430,6 +489,12 @@ const OfficialDashboard = () => {
                   >
                     {booking.status}
                   </span>
+                  <button
+                    onClick={() => openChat(booking.organizer)}
+                    className="ml-2 px-3 py-1 text-sm font-medium text-[#0B405B] border border-[#0B405B] rounded-md hover:bg-[#0B405B] hover:text-white transition-colors"
+                  >
+                    💬 Chat
+                  </button>
                 </div>
               </div>
             ))}
@@ -479,6 +544,12 @@ const OfficialDashboard = () => {
                   </div>
                   <div className="flex space-x-2 ml-4">
                     <button
+                      onClick={() => openChat(request.organizer)}
+                      className="flex items-center px-3 py-1 text-sm font-medium text-[#0B405B] border border-[#0B405B] rounded-md hover:bg-[#0B405B] hover:text-white transition-colors"
+                    >
+                      💬 Chat
+                    </button>
+                    <button
                       onClick={() => handleBookingAction(request._id, "accepted")}
                       className="flex items-center px-3 py-1 text-sm font-medium text-white rounded-md"
                       style={{ backgroundColor: "#0B405B" }}
@@ -507,7 +578,22 @@ const OfficialDashboard = () => {
     switch (activeTab) {
       case "dashboard":
         return renderDashboardContent();
-      case "profile":
+      case "profile": {
+        const nowTime = new Date();
+        const activeAvailabilitySlot = availabilities.find(a => a.start <= nowTime && a.end >= nowTime);
+        const isAvailableNow = !!activeAvailabilitySlot;
+        const mainAvailabilityRange = availabilities[0];
+
+        const isWeekendCovered = mainAvailabilityRange ? (() => {
+          const startDay = mainAvailabilityRange.start.getDay();
+          const endDay = mainAvailabilityRange.end.getDay();
+          const durationDays = (mainAvailabilityRange.end - mainAvailabilityRange.start) / (1000 * 60 * 60 * 24);
+          if (durationDays >= 6) return true;
+          if (startDay === 0 || startDay === 6 || endDay === 0 || endDay === 6) return true;
+          if (startDay > endDay) return true;
+          return false;
+        })() : false;
+
         return (
           <div className="space-y-6">
             {/* Profile Header */}
@@ -789,15 +875,33 @@ const OfficialDashboard = () => {
                     </div>
                     <div className="text-center p-4 bg-gray-50 rounded-lg">
                       <div className="text-2xl font-bold text-gray-900">
-                        98%
+                        {bookingRequests.length
+                          ? Math.round(
+                              (bookingRequests.filter(
+                                (b) => b.status === "accepted" || b.status === "confirmed"
+                              ).length /
+                                bookingRequests.length) *
+                                100
+                            ) + "%"
+                          : "100%"}
                       </div>
                       <div className="text-sm text-gray-600">
                         Completion Rate
                       </div>
                     </div>
                     <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className="text-2xl font-bold text-gray-900">15</div>
-                      <div className="text-sm text-gray-600">This Month</div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {bookingRequests.filter((b) => {
+                          if (!b.event?.date) return false;
+                          const eventDate = new Date(b.event.date);
+                          const now = new Date();
+                          return (
+                            eventDate.getMonth() === now.getMonth() &&
+                            eventDate.getFullYear() === now.getFullYear()
+                          );
+                        }).length}
+                      </div>
+                      <div className="text-sm text-gray-600 font-medium text-gray-600">This Month</div>
                     </div>
                   </div>
                 </div>
@@ -845,23 +949,33 @@ const OfficialDashboard = () => {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-gray-700">Current Status</span>
-                      <span className="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">
-                        Available
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        isAvailableNow ? "text-[#0B405B] bg-[#94D82A33]" : "text-gray-700 bg-gray-100"
+                      }`}>
+                        {isAvailableNow ? "Available" : "Unavailable"}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-700">Next Available</span>
-                      <span className="text-sm text-gray-900">
-                        July 28, 2025
+                      <span className="text-gray-700 text-sm">Availability Slot</span>
+                      <span className="text-xs text-gray-900 font-medium text-right max-w-[150px] truncate">
+                        {mainAvailabilityRange
+                          ? `${mainAvailabilityRange.start.toLocaleDateString()} - ${mainAvailabilityRange.end.toLocaleDateString()}`
+                          : "No active slot"
+                        }
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-700">
                         Weekend Availability
                       </span>
-                      <span className="text-sm text-gray-900">Open</span>
+                      <span className="text-sm text-gray-900 font-medium">
+                        {isWeekendCovered ? "Yes" : "No"}
+                      </span>
                     </div>
-                    <button className="w-full mt-3 px-4 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+                    <button 
+                      onClick={() => setActiveTab("availability")}
+                      className="w-full mt-3 px-4 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+                    >
                       Update Availability
                     </button>
                   </div>
@@ -872,48 +986,44 @@ const OfficialDashboard = () => {
                     Recent Reviews
                   </h2>
                   <div className="space-y-4">
-                    <div className="border-b border-gray-200 pb-3">
-                      <div className="flex items-center mb-2">
-                        <div className="flex text-yellow-400">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className="w-4 h-4 fill-current" />
-                          ))}
+                    {reviewsLoading ? (
+                      <p className="text-gray-500 text-sm">Loading reviews...</p>
+                    ) : reviewsError ? (
+                      <p className="text-red-500 text-sm">{reviewsError}</p>
+                    ) : officialReviews.length === 0 ? (
+                      <p className="text-gray-500 text-sm italic">No reviews yet.</p>
+                    ) : (
+                      officialReviews.slice(0, 5).map((r) => (
+                        <div key={r._id} className="border-b border-gray-100 pb-3 last:border-b-0 last:pb-0">
+                          <div className="flex items-center mb-1">
+                            <div className="flex text-yellow-400">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-3.5 h-3.5 ${
+                                    i < r.rating ? "fill-current text-yellow-400" : "text-gray-300"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <span className="ml-2 text-xs font-semibold text-gray-600">
+                              {r.rating}.0
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-700 italic font-medium">"{r.reviewText}"</p>
+                          <p className="text-[10px] text-gray-400 mt-1">
+                            - {r.organizer?.name || "Organizer"}{r.eventName ? ` (${r.eventName})` : ""}
+                          </p>
                         </div>
-                        <span className="ml-2 text-sm text-gray-600">5.0</span>
-                      </div>
-                      <p className="text-sm text-gray-700">
-                        "Excellent officiating skills and professional conduct."
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        - Mumbai FC Tournament
-                      </p>
-                    </div>
-                    <div className="border-b border-gray-200 pb-3">
-                      <div className="flex items-center mb-2">
-                        <div className="flex text-yellow-400">
-                          {[...Array(4)].map((_, i) => (
-                            <Star key={i} className="w-4 h-4 fill-current" />
-                          ))}
-                          <Star className="w-4 h-4 text-gray-300" />
-                        </div>
-                        <span className="ml-2 text-sm text-gray-600">4.0</span>
-                      </div>
-                      <p className="text-sm text-gray-700">
-                        "Good decision making throughout the match."
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        - Basketball League
-                      </p>
-                    </div>
-                    <button className="w-full text-sm text-blue-600 hover:text-blue-700 font-medium">
-                      View All Reviews
-                    </button>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
             </div>
           </div>
         );
+      }
       case "availability":
         const activeAvailability = getActiveAvailability();
         const handleDeleteAvailability = async () => {
@@ -1451,6 +1561,14 @@ const OfficialDashboard = () => {
             </div>
           ) : (
             renderContent()
+          )}
+
+          {showChatInterface && selectedOrganizer && (
+            <ChatInterface
+              onClose={() => setShowChatInterface(false)}
+              initialContact={selectedOrganizer}
+              currentUserRole="official"
+            />
           )}
         </main>
       </div>

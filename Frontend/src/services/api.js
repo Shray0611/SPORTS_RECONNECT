@@ -326,6 +326,21 @@ class ApiService {
     }
   }
 
+  // Update booking details
+  async updateBookingDetails(bookingId, updateData) {
+    try {
+      const response = await fetch(`${this.baseURL}/booking/${bookingId}`, {
+        method: "PUT",
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(updateData),
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error("Update booking details error:", error);
+      throw error;
+    }
+  }
+
   // Create booking request
   async createBookingRequest(data) {
     try {
@@ -351,6 +366,92 @@ class ApiService {
       return await this.handleResponse(response);
     } catch (error) {
       console.error("Get all officials error:", error);
+      throw error;
+    }
+  }
+
+  // Get reviews for a specific official
+  async getReviewsForOfficial(officialId) {
+    try {
+      const response = await fetch(`${this.baseURL}/reviews/official/${officialId}`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error("Get official reviews error:", error);
+      throw error;
+    }
+  }
+
+  // Create a review for an official
+  async createReview(reviewData) {
+    try {
+      const response = await fetch(`${this.baseURL}/reviews`, {
+        method: "POST",
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(reviewData),
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error("Create review error:", error);
+      throw error;
+    }
+  }
+
+  // Get all reviews (admin only)
+  async getAllReviews() {
+    try {
+      const response = await fetch(`${this.baseURL}/reviews`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error("Get all reviews error:", error);
+      throw error;
+    }
+  }
+
+  // Delete a review (admin only)
+  async deleteReview(reviewId) {
+    try {
+      const response = await fetch(`${this.baseURL}/reviews/${reviewId}`, {
+        method: "DELETE",
+        headers: this.getAuthHeaders(),
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error("Delete review error:", error);
+      throw error;
+    }
+  }
+
+  // Get chat history with a specific user
+  async getChatHistory(userId) {
+    try {
+      const response = await fetch(`${this.baseURL}/chat/${userId}`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error("Get chat history error:", error);
+      throw error;
+    }
+  }
+
+  // Send a chat message
+  async sendMessage(receiverId, text) {
+    try {
+      const response = await fetch(`${this.baseURL}/chat/send`, {
+        method: "POST",
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ receiverId, text }),
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error("Send message error:", error);
       throw error;
     }
   }
