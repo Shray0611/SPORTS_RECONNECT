@@ -16,22 +16,16 @@ export default function OrganizerNavbar() {
 
       <div className="flex flex-col gap-2 flex-1">
         <Link
-          to="/"
+          to="/organizer/dashboard"
           className="hover:text-[#94D82A] py-3 px-3 rounded hover:bg-[#0B405B]/50 transition-colors font-medium"
         >
-          Home
+          Dashboard
         </Link>
         <Link
           to="/search-officials"
           className="hover:text-[#94D82A] py-3 px-3 rounded hover:bg-[#0B405B]/50 transition-colors font-medium"
         >
           Search Officials
-        </Link>
-        <Link
-          to="/OrgDashboard"
-          className="hover:text-[#94D82A] py-3 px-3 rounded hover:bg-[#0B405B]/50 transition-colors font-medium"
-        >
-          OrgDashboard
         </Link>
       </div>
 

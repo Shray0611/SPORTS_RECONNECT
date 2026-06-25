@@ -283,6 +283,78 @@ class ApiService {
     }
   }
 
+  // Get received bookings (for officials)
+  async getReceivedBookings() {
+    try {
+      const response = await fetch(`${this.baseURL}/booking/received`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error("Get received bookings error:", error);
+      throw error;
+    }
+  }
+
+  // Get sent bookings (for organizers)
+  async getSentBookings() {
+    try {
+      const response = await fetch(`${this.baseURL}/booking/sent`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error("Get sent bookings error:", error);
+      throw error;
+    }
+  }
+
+  // Update booking status
+  async updateBookingStatus(bookingId, status) {
+    try {
+      const response = await fetch(`${this.baseURL}/booking/${bookingId}`, {
+        method: "PATCH",
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ status }),
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error("Update booking status error:", error);
+      throw error;
+    }
+  }
+
+  // Create booking request
+  async createBookingRequest(data) {
+    try {
+      const response = await fetch(`${this.baseURL}/booking`, {
+        method: "POST",
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data),
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error("Create booking error:", error);
+      throw error;
+    }
+  }
+
+  // Get all officials (for organizers)
+  async getAllOfficials() {
+    try {
+      const response = await fetch(`${this.baseURL}/officials`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error("Get all officials error:", error);
+      throw error;
+    }
+  }
+
   // Store token in localStorage
   setToken(token) {
     localStorage.setItem("token", token);

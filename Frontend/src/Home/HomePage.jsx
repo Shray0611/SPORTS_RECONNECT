@@ -35,7 +35,7 @@ export default function GameOfficialsHub() {
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
                 <button
-                  onClick={() => navigate("/OfficalsHomepage")}
+                  onClick={() => navigate("/official/dashboard")}
                   className="text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg hover:opacity-90"
                   style={{ backgroundColor: "#94D82A" }}
                 >
@@ -47,7 +47,7 @@ export default function GameOfficialsHub() {
                     borderColor: "#94D82A",
                     backgroundColor: "transparent",
                   }}
-                  onClick={() => navigate("/OrgDashboard")} // navigate to OrgDashboard
+                  onClick={() => navigate("/organizer/dashboard")} // navigate to OrgDashboard
                 >
                   Find Officials
                 </button>

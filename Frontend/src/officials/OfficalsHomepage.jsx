@@ -21,110 +21,6 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import moment from "moment";
 import api from "../services/api";
 
-// Mock API service
-const mockApiService = {
-  getToken: () => "mock-token",
-  logout: () => {},
-  getCurrentUser: () =>
-    Promise.resolve({
-      user: {
-        _id: "1",
-        name: "John Smith",
-        email: "john@example.com",
-        phone: "+1234567890",
-        location: "Mumbai, Maharashtra",
-        dateOfBirth: "1985-06-15",
-        experience: "5 years",
-        sports: ["Football", "Basketball"],
-        certifications: ["FIFA Certified", "Basketball Official Level 2"],
-        organization: "Sports Officials Association",
-        rating: 4.8,
-        totalMatches: 125,
-        upcomingBookings: 3,
-        pendingRequests: 2,
-        approvalStatus: "approved",
-      },
-    }),
-  updateProfile: (data) =>
-    Promise.resolve({
-      user: {
-        _id: "1",
-        name: data.name,
-        email: "john@example.com",
-        phone: data.phone,
-        location: data.location,
-        dateOfBirth: data.dateOfBirth,
-        experience: data.experience,
-        sports: ["Football", "Basketball"],
-        certifications: ["FIFA Certified", "Basketball Official Level 2"],
-        organization: data.organization,
-        rating: 4.8,
-        totalMatches: 125,
-        upcomingBookings: 3,
-        pendingRequests: 2,
-        approvalStatus: "approved",
-      },
-    }),
-  get: (url) =>
-    Promise.resolve({
-      data: [
-        {
-          _id: "1",
-          start: new Date().toISOString(),
-          end: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-        },
-      ],
-    }),
-  post: (url, data) =>
-    Promise.resolve({
-      data: {
-        _id: Date.now().toString(),
-        start: data.start,
-        end: data.end,
-      },
-    }),
-};
-
-// Mock data
-const recentBookings = [
-  {
-    id: 1,
-    tournament: "Premier League Match",
-    venue: "Wembley Stadium",
-    date: "July 28, 2025",
-    time: "3:00 PM",
-    sport: "Football",
-    status: "confirmed",
-  },
-  {
-    id: 2,
-    tournament: "Basketball Championship",
-    venue: "Sports Complex",
-    date: "July 30, 2025",
-    time: "7:00 PM",
-    sport: "Basketball",
-    status: "pending",
-  },
-];
-
-const pendingRequests = [
-  {
-    id: 1,
-    tournament: "Youth Football Cup",
-    organizer: "Mumbai FC",
-    date: "August 5, 2025",
-    time: "4:00 PM",
-    fee: "₹2,500",
-  },
-  {
-    id: 2,
-    tournament: "Inter-School Basketball",
-    organizer: "Delhi Sports Club",
-    date: "August 8, 2025",
-    time: "6:00 PM",
-    fee: "₹1,800",
-  },
-];
 
 const sidebarItems = [
   { id: "dashboard", label: "Dashboard", icon: BookOpen },
@@ -218,10 +114,9 @@ const OfficialDashboard = () => {
   const handleBookingAction = async (id, action) => {
     setActionLoading(id);
     try {
-      // Mock API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Update the booking status
+      await api.updateBookingStatus(id, action);
+      
+      // Update the booking status in local state
       setBookingRequests((prev) =>
         prev.map((req) => (req._id === id ? { ...req, status: action } : req))
       );
@@ -253,7 +148,7 @@ const OfficialDashboard = () => {
 
   useEffect(() => {
     const handlePopState = () => {
-      mockApiService.logout();
+      api.logout();
       alert("Session ended");
     };
     window.addEventListener("popstate", handlePopState);
@@ -283,43 +178,8 @@ const OfficialDashboard = () => {
       setBookingLoading(true);
       setBookingError("");
       try {
-        // Mock booking requests
-        const mockBookings = [
-          {
-            _id: "1",
-            event: {
-              name: "Summer Championship",
-              sport: "Football",
-              date: "August 15, 2025",
-              location: "Sports Stadium",
-              details: "Final match of the tournament",
-            },
-            organizer: {
-              name: "Sports Club Mumbai",
-              email: "contact@sportsmumbai.com",
-            },
-            status: "pending",
-            message:
-              "We need an experienced referee for our championship final.",
-          },
-          {
-            _id: "2",
-            event: {
-              name: "Youth Basketball League",
-              sport: "Basketball",
-              date: "August 20, 2025",
-              location: "Community Center",
-              details: "Semi-final match",
-            },
-            organizer: {
-              name: "Youth Sports Association",
-              email: "youth@sports.org",
-            },
-            status: "pending",
-            message: "Looking for a certified basketball official.",
-          },
-        ];
-        setBookingRequests(mockBookings);
+        const data = await api.getReceivedBookings();
+        setBookingRequests(data.bookings || []);
       } catch (err) {
         setBookingError(err.message || "Error fetching booking requests");
       } finally {
@@ -429,7 +289,7 @@ const OfficialDashboard = () => {
     setEditLoading(true);
     setEditError("");
     try {
-      const response = await mockApiService.updateProfile(editForm);
+      const response = await api.updateProfile(editForm);
       setOfficialData(response.user);
       setShowEditModal(false);
     } catch (err) {
@@ -438,6 +298,9 @@ const OfficialDashboard = () => {
       setEditLoading(false);
     }
   };
+
+  const recentBookings = bookingRequests.filter(req => req.status === "accepted" || req.status === "confirmed");
+  const pendingRequests = bookingRequests.filter(req => req.status === "pending");
 
   const renderDashboardContent = () => (
     <div className="space-y-6">
@@ -471,7 +334,7 @@ const OfficialDashboard = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Matches</p>
               <p className="text-2xl font-bold text-gray-900">
-                {officialData?.totalMatches || "N/A"}
+                {officialData?.totalMatches || recentBookings.length}
               </p>
             </div>
           </div>
@@ -488,7 +351,7 @@ const OfficialDashboard = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Upcoming</p>
               <p className="text-2xl font-bold text-gray-900">
-                {officialData?.upcomingBookings || "N/A"}
+                {recentBookings.filter(b => new Date(b.event?.date) > new Date()).length}
               </p>
             </div>
           </div>
@@ -504,7 +367,7 @@ const OfficialDashboard = () => {
                 Pending Requests
               </p>
               <p className="text-2xl font-bold text-gray-900">
-                {officialData?.pendingRequests || "N/A"}
+                {pendingRequests.length}
               </p>
             </div>
           </div>
@@ -534,33 +397,31 @@ const OfficialDashboard = () => {
         </div>
         <div className="p-6">
           <div className="space-y-4">
-            {recentBookings.map((booking) => (
+            {recentBookings.length === 0 ? (
+              <p className="text-gray-500">No accepted bookings yet.</p>
+            ) : recentBookings.map((booking) => (
               <div
-                key={booking.id}
+                key={booking._id}
                 className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
               >
                 <div className="flex-1">
                   <h3 className="font-medium text-gray-900">
-                    {booking.tournament}
+                    {booking.event?.name}
                   </h3>
                   <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
                     <span className="flex items-center">
                       <MapPin className="w-4 h-4 mr-1" />
-                      {booking.venue}
+                      {booking.event?.location}
                     </span>
                     <span className="flex items-center">
                       <CalendarIcon className="w-4 h-4 mr-1" />
-                      {booking.date}
-                    </span>
-                    <span className="flex items-center">
-                      <Clock className="w-4 h-4 mr-1" />
-                      {booking.time}
+                      {booking.event?.date ? new Date(booking.event.date).toLocaleDateString() : ""}
                     </span>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
                   <span className="px-2 py-1 text-xs font-medium rounded-full border border-gray-300">
-                    {booking.sport}
+                    {booking.event?.sport}
                   </span>
                   <span
                     className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
@@ -585,36 +446,40 @@ const OfficialDashboard = () => {
         </div>
         <div className="p-6">
           <div className="space-y-4">
-            {pendingRequests.map((request) => (
+            {pendingRequests.length === 0 ? (
+               <p className="text-gray-500">No pending requests.</p>
+            ) : pendingRequests.map((request) => (
               <div
-                key={request.id}
+                key={request._id}
                 className="p-4 border border-gray-200 rounded-lg"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <h3 className="font-medium text-gray-900">
-                      {request.tournament}
+                      {request.event?.name}
                     </h3>
                     <p className="text-sm text-gray-600 mt-1">
-                      Organized by {request.organizer}
+                      Organized by {request.organizer?.name}
                     </p>
                     <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
                       <span className="flex items-center">
                         <CalendarIcon className="w-4 h-4 mr-1" />
-                        {request.date}
+                        {request.event?.date ? new Date(request.event.date).toLocaleDateString() : ""}
                       </span>
                       <span className="flex items-center">
-                        <Clock className="w-4 h-4 mr-1" />
-                        {request.time}
-                      </span>
-                      <span className="font-medium text-green-600">
-                        {request.fee}
+                        <MapPin className="w-4 h-4 mr-1" />
+                        {request.event?.location}
                       </span>
                     </div>
+                    {request.message && (
+                      <p className="text-sm text-gray-700 mt-2 bg-gray-50 p-2 rounded">
+                        "{request.message}"
+                      </p>
+                    )}
                   </div>
                   <div className="flex space-x-2 ml-4">
                     <button
-                      onClick={() => handleBookingAction(request.id, "accept")}
+                      onClick={() => handleBookingAction(request._id, "accepted")}
                       className="flex items-center px-3 py-1 text-sm font-medium text-white rounded-md"
                       style={{ backgroundColor: "#0B405B" }}
                     >
@@ -622,7 +487,7 @@ const OfficialDashboard = () => {
                       Accept
                     </button>
                     <button
-                      onClick={() => handleBookingAction(request.id, "reject")}
+                      onClick={() => handleBookingAction(request._id, "rejected")}
                       className="flex items-center px-3 py-1 text-sm font-medium text-red-600 border border-red-300 rounded-md hover:bg-red-50"
                     >
                       <XCircle className="w-4 h-4 mr-1" />
