@@ -43,13 +43,13 @@ const ApproveDeclineProfiles = () => {
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">Approve/Decline Profiles</h2>
-      <p>Approve or decline new official profiles here.</p>
+      <p>Approve or decline new official and organizer profiles here.</p>
       {loading ? (
         <p>Loading...</p>
       ) : error ? (
         <p className="text-red-500">{error}</p>
       ) : pendingOfficials.length === 0 ? (
-        <p>No pending officials.</p>
+        <p>No pending profiles.</p>
       ) : (
         <div className="space-y-4 mt-4">
           {pendingOfficials.map((official) => (
@@ -58,6 +58,9 @@ const ApproveDeclineProfiles = () => {
               <div>Email: {official.email}</div>
               <div>Phone: {official.phone || "-"}</div>
               <div>Sports: {official.sports?.join(", ") || "-"}</div>
+              <div>
+                Role: <span className="font-semibold uppercase text-blue-600">{official.role}</span>
+              </div>
               <div>Status: <span className="font-bold text-yellow-600">Pending</span></div>
               <div className="mt-2 space-x-2">
                 <button
