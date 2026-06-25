@@ -476,6 +476,36 @@ class ApiService {
     return !!this.getToken();
   }
 
+  // Upload profile photo (sends base64 string)
+  async uploadProfilePhoto(base64String) {
+    try {
+      const response = await fetch(`${this.baseURL}/me`, {
+        method: "PUT",
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ profilePhoto: base64String }),
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error("Upload profile photo error:", error);
+      throw error;
+    }
+  }
+
+  // Remove profile photo
+  async removeProfilePhoto() {
+    try {
+      const response = await fetch(`${this.baseURL}/me`, {
+        method: "PUT",
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ profilePhoto: null }),
+      });
+      return await this.handleResponse(response);
+    } catch (error) {
+      console.error("Remove profile photo error:", error);
+      throw error;
+    }
+  }
+
   // Logout user
   logout() {
     this.removeToken();

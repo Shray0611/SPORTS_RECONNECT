@@ -67,6 +67,7 @@ const RegisteredOfficials = () => {
               <table className="min-w-full bg-white border-collapse">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4">Photo</th>
                     <th className="px-6 py-4">Name</th>
                     <th className="px-6 py-4">Email</th>
                     <th className="px-6 py-4">Location</th>
@@ -83,6 +84,15 @@ const RegisteredOfficials = () => {
                   ) : (
                     officials.map((official) => (
                       <tr key={official._id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {official.profilePhoto ? (
+                            <img src={official.profilePhoto} alt={official.name} className="w-10 h-10 rounded-full object-cover border-2 border-[#94D82A]" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{ backgroundColor: "#0B405B" }}>
+                              {official.name ? official.name.split(" ").map(n => n[0]).join("") : "O"}
+                            </div>
+                          )}
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
                           {official.name}
                         </td>

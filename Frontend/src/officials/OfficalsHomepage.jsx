@@ -49,6 +49,8 @@ const OfficialDashboard = () => {
   const [editForm, setEditForm] = useState(null);
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoError, setPhotoError] = useState("");
 
   // Booking Requests State
   const [bookingRequests, setBookingRequests] = useState([]);
@@ -346,6 +348,48 @@ const OfficialDashboard = () => {
 
   const recentBookings = bookingRequests.filter(req => req.status === "accepted" || req.status === "confirmed");
   const pendingRequests = bookingRequests.filter(req => req.status === "pending");
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      setPhotoError("Photo must be smaller than 2MB.");
+      return;
+    }
+    setPhotoUploading(true);
+    setPhotoError("");
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64 = reader.result;
+        const response = await api.uploadProfilePhoto(base64);
+        setOfficialData(response.user);
+        setPhotoUploading(false);
+      };
+      reader.onerror = () => {
+        setPhotoError("Failed to read file.");
+        setPhotoUploading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      setPhotoError(err.message || "Failed to upload photo.");
+      setPhotoUploading(false);
+    }
+  };
+
+  const handlePhotoRemove = async () => {
+    if (!window.confirm("Remove your profile photo?")) return;
+    setPhotoUploading(true);
+    setPhotoError("");
+    try {
+      const response = await api.removeProfilePhoto();
+      setOfficialData(response.user);
+    } catch (err) {
+      setPhotoError(err.message || "Failed to remove photo.");
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
 
   const renderDashboardContent = () => (
     <div className="space-y-6">
@@ -751,6 +795,55 @@ const OfficialDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Personal Information */}
               <div className="lg:col-span-2">
+                {/* Profile Photo Upload Card */}
+                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Profile Photo</h2>
+                  <div className="flex items-center space-x-6">
+                    <div className="relative">
+                      {officialData?.profilePhoto ? (
+                        <img
+                          src={officialData.profilePhoto}
+                          alt="Profile"
+                          className="w-24 h-24 rounded-full object-cover border-4 border-[#94D82A] shadow-md"
+                        />
+                      ) : (
+                        <div
+                          className="w-24 h-24 rounded-full flex items-center justify-center text-white text-3xl font-bold border-4 border-[#94D82A] shadow-md"
+                          style={{ backgroundColor: "#0B405B" }}
+                        >
+                          {officialData?.name ? officialData.name.split(" ").map(n => n[0]).join("") : "O"}
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="photo-upload"
+                        className={`cursor-pointer inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg border-2 border-[#0B405B] text-[#0B405B] hover:bg-[#0B405B] hover:text-white transition-colors ${photoUploading ? "opacity-50 cursor-not-allowed" : ""}`}
+                      >
+                        {photoUploading ? "Uploading..." : "📷 Upload Photo"}
+                      </label>
+                      <input
+                        id="photo-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handlePhotoUpload}
+                        disabled={photoUploading}
+                      />
+                      {officialData?.profilePhoto && (
+                        <button
+                          onClick={handlePhotoRemove}
+                          disabled={photoUploading}
+                          className="block text-sm text-red-500 hover:text-red-700 hover:underline"
+                        >
+                          🗑️ Remove Photo
+                        </button>
+                      )}
+                      {photoError && <p className="text-red-500 text-xs">{photoError}</p>}
+                      <p className="text-xs text-gray-400">Max 2MB. JPG, PNG, GIF accepted.</p>
+                    </div>
+                  </div>
+                </div>
                 <div className="bg-white rounded-lg shadow-md p-6">
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">
                     Personal Information
@@ -1411,17 +1504,25 @@ const OfficialDashboard = () => {
 
           <div className="px-6 py-4 border-b border-blue-800 flex-shrink-0">
             <div className="flex items-center">
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
-                style={{ backgroundColor: "#94D82A" }}
-              >
-                {officialData?.name
-                  ? officialData.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                  : "O"}
-              </div>
+              {officialData?.profilePhoto ? (
+                <img
+                  src={officialData.profilePhoto}
+                  alt="Profile"
+                  className="w-10 h-10 rounded-full object-cover border-2 border-[#94D82A]"
+                />
+              ) : (
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
+                  style={{ backgroundColor: "#94D82A" }}
+                >
+                  {officialData?.name
+                    ? officialData.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                    : "O"}
+                </div>
+              )}
               <div className="ml-3">
                 <p className="text-sm font-medium text-white">
                   {officialData?.name || "Official"}

@@ -91,14 +91,27 @@ const ApproveDeclineProfiles = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {pendingOfficials.map((official) => (
                 <div key={official._id} className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900">{official.name}</h3>
-                      <p className="text-gray-500 text-sm">{official.email}</p>
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="flex-shrink-0">
+                      {official.profilePhoto ? (
+                        <img src={official.profilePhoto} alt={official.name} className="w-14 h-14 rounded-full object-cover border-2 border-[#94D82A]" />
+                      ) : (
+                        <div className="w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold" style={{ backgroundColor: "#0B405B" }}>
+                          {official.name ? official.name.split(" ").map(n => n[0]).join("") : "U"}
+                        </div>
+                      )}
                     </div>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                      Pending
-                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900 truncate">{official.name}</h3>
+                          <p className="text-gray-500 text-sm truncate">{official.email}</p>
+                        </div>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 flex-shrink-0">
+                          Pending
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="space-y-2 mb-6">

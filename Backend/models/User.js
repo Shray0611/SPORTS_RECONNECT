@@ -39,6 +39,7 @@ const userSchema = new mongoose.Schema(
     experience: { type: String, trim: true },
     organization: { type: String, trim: true },
     certifications: { type: [String], default: [] },
+    profilePhoto: { type: String, default: null }, // base64 or URL
     approvalStatus: {
       type: String,
       enum: ["pending", "approved", "rejected"],

@@ -252,8 +252,12 @@ export default function SearchOfficials() {
             <div className="bg-gradient-to-r from-[#0B405B] to-[#0a364d] text-white p-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center text-3xl">
-                    {getSportIcon(selectedOfficial.sports[0])}
+                  <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white/30 flex items-center justify-center bg-white/20 text-3xl flex-shrink-0">
+                    {selectedOfficial.profilePhoto ? (
+                      <img src={selectedOfficial.profilePhoto} alt={selectedOfficial.name} className="w-full h-full object-cover" />
+                    ) : (
+                      getSportIcon(selectedOfficial.sports[0])
+                    )}
                   </div>
                   <div>
                     <h2 className="text-3xl font-bold mb-2">
@@ -623,8 +627,12 @@ export default function SearchOfficials() {
                       onClick={() => setSelectedOfficial(official)}
                     >
                       <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-2xl group-hover:bg-blue-200 transition-colors">
-                          {getSportIcon(official.sports[0])}
+                        <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-gray-200 flex items-center justify-center bg-blue-100 text-2xl flex-shrink-0">
+                          {official.profilePhoto ? (
+                            <img src={official.profilePhoto} alt={official.name} className="w-full h-full object-cover" />
+                          ) : (
+                            getSportIcon(official.sports[0])
+                          )}
                         </div>
                         <div className="text-right">
                           <div className="text-sm text-gray-500">Rating</div>

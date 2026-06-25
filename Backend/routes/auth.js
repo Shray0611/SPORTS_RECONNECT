@@ -253,7 +253,7 @@ router.post("/login", async (req, res) => {
 // GET /api/me - Get current user profile (protected route)
 router.get("/me", authMiddleware, async (req, res) => {
   try {
-    const userObj = req.user.toObject();
+    const userObj = typeof req.user.toObject === 'function' ? req.user.toObject() : { ...req.user };
     if (req.user.role === "official") {
       const { getOfficialStats } = require("../utils/stats");
       const stats = await getOfficialStats(req.user._id);
@@ -267,8 +267,11 @@ router.get("/me", authMiddleware, async (req, res) => {
     });
   } catch (error) {
     console.error("Get profile error:", error);
+    require('fs').writeFileSync('get_me_error.txt', error.toString() + "\n" + error.stack);
     res.status(500).json({
       message: "Server error while retrieving profile",
+      error: error.message,
+      stack: error.stack
     });
   }
 });
@@ -288,6 +291,7 @@ router.put("/me", authMiddleware, async (req, res) => {
       "certifications",
       "organization",
       "dateOfEstablishment",
+      "profilePhoto",
     ];
     allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) {
